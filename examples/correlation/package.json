@@ -1,0 +1,15 @@
+{
+  "name": "example_app_correlation",
+  "version": "1.0.0",
+  "description": "Node.js example applications for correlation",
+  "author": "First Last <first.last@example.com>",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server-a.js"
+  },
+  "dependencies": {
+    "body-parser": "1.19.0",
+    "express": "^4.16.1",
+    "@hypertrace/nodejsagent": "../.."
+  }
+}

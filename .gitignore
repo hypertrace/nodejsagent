@@ -1,0 +1,15 @@
+# compiled output
+/dist
+/tmp
+/out-tsc
+build
+
+# Generated js
+# TODO: Is there a better way to do it
+src/**/*.js
+
+# dependencies
+/**/node_modules
+
+# package lock
+/**/package-lock.json

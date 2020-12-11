@@ -1,0 +1,28 @@
+{
+  "name": "@hypertrace/nodejsagent",
+  "version": "0.0.0",
+  "description": "Hypertrace Node.js Agent",
+  "author": "Traceable Inc.",
+  "license": "Apache-2.0",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hypertrace/nodejsagent"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "0.12.0",
+    "@opentelemetry/core": "0.12.0",
+    "@opentelemetry/node": "0.12.0",
+    "@opentelemetry/tracing": "0.12.0",
+    "@opentelemetry/plugin-http": "0.12.0",
+    "@opentelemetry/plugin-https": "0.12.0",
+    "@opentelemetry/exporter-zipkin": "0.12.0"
+  },
+  "devDependencies": {
+    "ts-node": "~9.0.0",
+    "eslint": "7.14.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "4.1.2",
+    "typescript-tslint-plugin": "^0.5.5"
+  }
+}
