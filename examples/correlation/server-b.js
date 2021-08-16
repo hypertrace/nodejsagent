@@ -6,10 +6,11 @@
  * Pass in the serviceName and collectorUrl in the config when initializing the agent.
  * */
 var hypertraceagent = require('@hypertrace/nodejsagent')
+const COLLECTOR_ENDPOINT = process.env.COLLECTOR_ENDPOINT || "127.0.0.1:9411";
 const hypertracetracer = new hypertraceagent.HypertraceAgent(
   {
     serviceName: "server-b",
-    collectorUrl: "http://localhost:9411/api/v2/spans"
+    collectorUrl: "http://" + COLLECTOR_ENDPOINT + "/api/v2/spans"
   });
 
 const express = require('express');
@@ -17,7 +18,7 @@ var bodyParser = require('body-parser')
 
 // Constants
 const PORT = 8081;
-const HOST = '0.0.0.0';
+const HOST = '127.0.0.1';
 
 
 // App
@@ -29,13 +30,13 @@ app.use(bodyParser.json({
 
 // curl localhost:8081/
 app.get('/', (req, res) => {
-  res.send({'status':'home_success'});
+  res.send({ 'status': 'home_success' });
 });
 
 // curl -X POST -H "Content-Type: application/json" -d '{"a1":"v1","b1":"c1"}' localhost:8081/foo
 app.post('/foo', (req, res) => {
   console.log(JSON.stringify(req.body));
-  res.send({'status':'foo_success'});
+  res.send({ 'status': 'foo_success' });
 });
 
 app.listen(PORT, HOST);
