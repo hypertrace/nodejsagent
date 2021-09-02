@@ -27,7 +27,7 @@ export class HypertraceAgent {
         this.config = new Config()
         this._provider = this.setupTracingProvider()
         this.exporter = this.setupExporter()
-
+        this.setupPropagation()
         this._provider.register()
     }
 

@@ -5,17 +5,17 @@
  * imports.
  * Pass in the serviceName and collectorUrl in the config when initializing the agent.
  * */
-var hypertraceagent = require('@hypertrace/nodejsagent')
-let config = hypertrace.config.v1.AgentConfig
-let customConfig = config.create()
-customConfig.serviceName = "asdf"
-const hypertracetracer = new hypertraceagent.HypertraceAgent();
+process.env.HT_REPORTING_ENDPOINT = 'http://localhost:9411/api/v2/spans'
+process.env.REPORTING_TRACE_REPORTER_TYPE = 'ZIPKIN'
+var hypertrace = require('@hypertrace/nodejsagent')
+const hypertraceAgent = new hypertrace.HypertraceAgent();
+hypertraceAgent.instrument()
 
 const express = require('express');
 var bodyParser = require('body-parser')
 
 // Constants
-const PORT = 8081;
+const PORT = 8002;
 const HOST = '127.0.0.1';
 
 
@@ -26,7 +26,7 @@ app.use(bodyParser.json({
   strict: false
 }))
 
-// curl localhost:8081/
+// curl localhost:8002/
 app.get('/', (req, res) => {
   res.send({ 'status': 'home_success' });
 });
