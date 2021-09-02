@@ -7,11 +7,10 @@ import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector";
 import {hypertrace} from "./config/generated";
-import {CompositePropagator} from "@opentelemetry/core";
+import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
 import {TextMapPropagator} from "@opentelemetry/api";
 const api = require("@opentelemetry/api");
-const { W3CTraceContextPropagator } = require("@opentelemetry/core");
 
 const {Resource} = require('@opentelemetry/resources');
 const {SemanticResourceAttributes} = require('@opentelemetry/semantic-conventions');
@@ -59,7 +58,7 @@ export class HypertraceAgent {
         let formats : TextMapPropagator[] = []
         for(let propagationType of this.config.config.propagation_formats) {
             if(propagationType == 'TRACECONTEXT'){
-                formats.push(new W3CTraceContextPropagator())
+                formats.push(new HttpTraceContextPropagator())
             } else if(propagationType == "B3") {
                 formats.push(new B3Propagator())
             }
