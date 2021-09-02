@@ -5,8 +5,6 @@
  * imports.
  * Pass in the serviceName and collectorUrl in the config when initializing the agent.
  * */
-process.env.HT_REPORTING_ENDPOINT = 'http://localhost:9411/api/v2/spans'
-process.env.REPORTING_TRACE_REPORTER_TYPE = 'ZIPKIN'
 var hypertrace = require('@hypertrace/nodejsagent');
 const hypertraceAgent = new hypertrace.HypertraceAgent()
 hypertraceAgent.instrument()
