@@ -13,3 +13,6 @@ src/**/*.js
 
 # package lock
 /**/package-lock.json
+
+# ide
+/.idea

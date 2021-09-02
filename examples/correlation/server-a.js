@@ -5,13 +5,9 @@
  * imports.
  * Pass in the serviceName and collectorUrl in the config when initializing the agent.
  * */
-var hypertraceagent = require('@hypertrace/nodejsagent');
-const COLLECTOR_ENDPOINT = process.env.COLLECTOR_ENDPOINT || "127.0.0.1:9411";
-const hypertracetracer = new hypertraceagent.HypertraceAgent(
-  {
-    serviceName: "server-a",
-    collectorUrl: "http://" + COLLECTOR_ENDPOINT + "/api/v2/spans"
-  });
+var hypertrace = require('@hypertrace/nodejsagent');
+const hypertraceAgent = new hypertrace.HypertraceAgent()
+hypertraceAgent.instrument()
 
 const express = require('express');
 var bodyParser = require('body-parser');
@@ -27,6 +23,10 @@ const app = express();
 app.use(bodyParser.json({
   strict: false
 }));
+
+app.get('/test', (req, res) => {
+  res.send({ 'status': 'get_success' });
+})
 
 // curl localhost:8080/
 app.get('/', (req, res) => {

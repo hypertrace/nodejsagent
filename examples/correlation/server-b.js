@@ -6,12 +6,10 @@
  * Pass in the serviceName and collectorUrl in the config when initializing the agent.
  * */
 var hypertraceagent = require('@hypertrace/nodejsagent')
-const COLLECTOR_ENDPOINT = process.env.COLLECTOR_ENDPOINT || "127.0.0.1:9411";
-const hypertracetracer = new hypertraceagent.HypertraceAgent(
-  {
-    serviceName: "server-b",
-    collectorUrl: "http://" + COLLECTOR_ENDPOINT + "/api/v2/spans"
-  });
+let config = hypertrace.config.v1.AgentConfig
+let customConfig = config.create()
+customConfig.serviceName = "asdf"
+const hypertracetracer = new hypertraceagent.HypertraceAgent();
 
 const express = require('express');
 var bodyParser = require('body-parser')
