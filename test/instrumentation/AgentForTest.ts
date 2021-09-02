@@ -1,7 +1,7 @@
 // This allows us to instantiate an agent that comes prepared with an InMemorySpanExporter
-import {hypertrace} from "../../src/instrumentation/config/generated";
+import {hypertrace} from "../../src/config/generated";
 import {HypertraceAgent} from "../../src";
-import {DEFAULT_AGENT_CONFIG} from "../../src/instrumentation/config/defaults";
+import {DEFAULT_AGENT_CONFIG} from "../../src/config/defaults";
 
 export class AgentForTest {
     public agent: HypertraceAgent;

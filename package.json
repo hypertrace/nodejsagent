@@ -39,6 +39,6 @@
   },
   "scripts": {
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'test/**/*.ts'",
-    "generate_pb": "pbjs --keep-case -t static-module -w default -o ./src/instrumentation/config/generated.js agent-config/proto/hypertrace/agent/config/v1/config.proto && pbts --keep-case -o ./src/instrumentation/config/generated.d.ts ./src/instrumentation/config/generated.js"
+    "generate_pb": "pbjs --keep-case -t static-module -w default -o src/config/generated.js agent-config/proto/hypertrace/agent/config/v1/config.proto && pbts --keep-case -o ./src/config/generated.d.ts ./src/config/generated.js"
   }
 }

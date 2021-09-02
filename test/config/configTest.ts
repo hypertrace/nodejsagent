@@ -1,7 +1,7 @@
-import {Config} from '../../../src/instrumentation/config/config'
+import {Config} from '../../src/config/config'
 import { expect } from 'chai';
 import {join} from "path";
-import {hypertrace} from "../../../src/instrumentation/config/generated";
+import {hypertrace} from "../../src/config/generated";
 import {common} from "protobufjs";
 
 describe('Config tests', () => {

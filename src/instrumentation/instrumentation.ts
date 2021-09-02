@@ -1,12 +1,12 @@
 import {NodeTracerProvider} from '@opentelemetry/node';
 import {BatchSpanProcessor, InMemorySpanExporter, SimpleSpanProcessor, SpanExporter} from '@opentelemetry/tracing';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
-import {Config} from './config/config'
+import {Config} from '../config/config'
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector";
-import {hypertrace} from "./config/generated";
+import {hypertrace} from "../config/generated";
 import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
 import {TextMapPropagator} from "@opentelemetry/api";
