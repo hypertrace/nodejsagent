@@ -9,7 +9,8 @@ import {CollectorTraceExporter} from "@opentelemetry/exporter-collector";
 import {hypertrace} from "../config/generated";
 import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
-import {TextMapPropagator} from "@opentelemetry/api";
+import {Span, TextMapPropagator} from "@opentelemetry/api";
+import {ClientRequest, IncomingMessage, ServerResponse} from "http";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -18,7 +19,7 @@ const {SemanticResourceAttributes} = require('@opentelemetry/semantic-convention
 const {registerInstrumentations} = require('@opentelemetry/instrumentation');
 
 export class HypertraceAgent {
-    private readonly _provider: NodeTracerProvider;
+    _provider: NodeTracerProvider;
     public config: Config
     public exporter: SpanExporter
 
@@ -69,16 +70,16 @@ export class HypertraceAgent {
         api.propagation.setGlobalPropagator(new CompositePropagator({propagators: formats}));
     }
 
-    private setupExporter(): SpanExporter {
+    protected setupExporter(): SpanExporter {
         let exporter = this.createExporter(this.config.config.reporting.trace_reporter_type)
 
         this._provider.addSpanProcessor(
-            new BatchSpanProcessor(exporter)
+            new SimpleSpanProcessor(exporter)
         );
         return exporter
     }
 
-    private createExporter(traceReporterType: string): SpanExporter {
+    protected createExporter(traceReporterType: string): SpanExporter {
         if(traceReporterType == 'ZIPKIN') {
             return new ZipkinExporter({
                 url: this.config.config.reporting.endpoint

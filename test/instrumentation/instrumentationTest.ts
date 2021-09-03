@@ -2,40 +2,69 @@ import supertest = require("supertest");
 import {AgentForTest} from "./AgentForTest";
 import {InMemorySpanExporter} from "@opentelemetry/tracing";
 import {expect} from "chai";
+import * as http from "http";
+import express from "express";
 
+const httpRequest = {
+    get: (options: http.ClientRequestArgs | string) => {
+        return new Promise((resolve, reject) => {
+            return http.get(options, resp => {
+                let data = '';
+                resp.on('data', chunk => {
+                    data += chunk;
+                });
+                resp.on('end', () => {
+                    resolve(data);
+                });
+                resp.on('error', err => {
+                    reject(err);
+                });
+            });
+        });
+    },
+};
 
 describe('Agent tests', () => {
-    it('can be initialized', () => {
-        const agentTestWrapper = new AgentForTest();
-        agentTestWrapper.agent.instrument()
+    const agentTestWrapper = new AgentForTest();
+    agentTestWrapper.agent.instrument()
 
-        const express = require('express');
+    const express = require('express');
 
-        const app = express();
+    const app = express();
 
-        app.get('/test', (req : any, res: any) => {
-            res.send({ 'status': 'success' });
-        })
+    app.get('/test', (req : any, res: any) => {
+        res.send({ 'status': 'success' });
+    })
+    let server = http.createServer(app)
 
-        supertest(app)
-            .get('/test')
-            .then(function(result: any){
-                let spans = (<InMemorySpanExporter>agentTestWrapper.agent.exporter).getFinishedSpans()
-                // first span is http request
-                // second span is server handling req
-                expect(spans.length).to.equal(2)
-                for(let span of spans){
-                    let attributes = span.attributes
-                    expect(attributes['http.method']).to.equal('GET')
-                    expect(attributes['net.host.name']).to.equal('127.0.0.1')
-                    expect(attributes['http.route']).to.equal('/test')
-                    expect(attributes['http.target']).to.equal('/test')
-                    expect(attributes['net.transport']).to.equal('ip_tcp')
-                    expect(attributes['http.status_code']).to.equal(200)
-                }
+    before((done)=> {
+        server.listen(8000)
+        server.on('listening', () => {done()})
+    })
 
-                expect(spans[0].name).to.equal('GET /test')
-                expect(spans[1].name).to.equal('HTTP GET')
-            })
+    after(()=> {
+        server.close()
+    })
+
+    it('can be initialized', async () => {
+        const response = await httpRequest.get('http://localhost:8000/test')
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(2)
+        let requestSpanAttributes = spans[0].attributes
+        expect(requestSpanAttributes['http.method']).to.equal('GET')
+        expect(requestSpanAttributes['net.host.name']).to.equal('localhost')
+        expect(requestSpanAttributes['http.route']).to.equal('/test')
+        expect(requestSpanAttributes['http.target']).to.equal('/test')
+        expect(requestSpanAttributes['net.transport']).to.equal('ip_tcp')
+        expect(requestSpanAttributes['http.status_code']).to.equal(200)
+        expect(spans[0].name).to.equal('GET /test')
+
+        let serverSpanAttributes = spans[1].attributes
+        expect(serverSpanAttributes['http.method']).to.equal('GET')
+        expect(serverSpanAttributes['net.peer.name']).to.equal('localhost')
+        expect(serverSpanAttributes['http.target']).to.equal('/test')
+        expect(serverSpanAttributes['net.transport']).to.equal('ip_tcp')
+        expect(serverSpanAttributes['http.status_code']).to.equal(200)
+        expect(spans[1].name).to.equal('HTTP GET')
     });
 });
