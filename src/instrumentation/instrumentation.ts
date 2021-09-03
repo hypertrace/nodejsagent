@@ -74,7 +74,7 @@ export class HypertraceAgent {
         let exporter = this.createExporter(this.config.config.reporting.trace_reporter_type)
 
         this._provider.addSpanProcessor(
-            new SimpleSpanProcessor(exporter)
+            new BatchSpanProcessor(exporter)
         );
         return exporter
     }
