@@ -102,17 +102,6 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
         }
-        // const listener = (d: Buffer) => {
-        //     console.log("reading data")
-        //     console.log(d)
-        //     body.push(d);
-        // }
-        // response!.socket!.on("data", listener)
-        // response!.socket!.on('finish', () => {
-        //     response!.socket!.removeListener("data", listener)
-        //     let parsedBody = Buffer.concat(body).toString();
-        //     span.setAttribute("http.response.body", parsedBody)
-        // })
     }
     RespHook = this.respHook.bind(this)
 
