@@ -1,2 +1,2 @@
-export * from './instrumentation/instrumentation';
+export * from './HypertraceAgent';
 export * from './config/config';

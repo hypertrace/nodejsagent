@@ -15,7 +15,7 @@ var http = require('http');
 
 
 // Constants
-const PORT = 8001;
+const PORT = 8005;
 const HOST = '127.0.0.1';
 
 // App
@@ -26,6 +26,7 @@ app.use(bodyParser.json({
 }));
 
 app.get('/test', (req, res) => {
+  res.setHeader("my-header", "foobar");
   res.send({ 'status': 'get_success' });
 })
 
