@@ -16,17 +16,30 @@ const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'a
 
 export class HttpInstrumentationWrapper {
     private agentConfig: AgentConfig
+    private requestHeaderCaptureEnabled: boolean
+    private requestBodyCaptureEnabled: boolean
+    private responseHeaderCaptureEnabled: boolean
+    private responseBodyCaptureEnabled: boolean
 
     constructor(config: AgentConfig) {
         this.agentConfig = config
+        let dataCapture = this.agentConfig!.data_capture
+        this.requestHeaderCaptureEnabled = <boolean>dataCapture!.http_headers!.request
+        this.responseHeaderCaptureEnabled = <boolean>dataCapture!.http_headers!.response
+        this.requestBodyCaptureEnabled = <boolean>dataCapture!.http_body!.request
+        this.responseBodyCaptureEnabled = <boolean>dataCapture!.http_body!.response
     }
 
     incomingRequestHook(span: Span, request: ClientRequest | IncomingMessage) {
-        if (request instanceof IncomingMessage) {
-            for (const [key, value] of Object.entries(request.headers)) {
+        if(this.requestHeaderCaptureEnabled) {
+            let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
+            for (const [key, value] of Object.entries(headers)) {
                 span.setAttribute(`http.request.header.${key}`, <string>value)
             }
-            if (this.shouldCaptureBody(request.headers)) {
+        }
+
+        if (request instanceof IncomingMessage) {
+            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, request.headers)) {
                 let body: any[] = []
                 const listener = (chunk: any) => {
                     body.push(chunk)
@@ -39,22 +52,20 @@ export class HttpInstrumentationWrapper {
                     span.setAttribute("http.request.body", parsedBody)
                 });
             }
-        } else {
-            for(const [key, value] of Object.entries(request.getHeaders())) {
-                span.setAttribute(`http.request.header.${key}`, <string>value)
-            }
         }
     }
     IncomingRequestHook = this.incomingRequestHook.bind(this)
 
     outgoingRequestHook(request: RequestOptions) : AttrWrapper {
         let attrs = new AttrWrapper()
-        let outgoingHeaders = request.headers
-        if(!outgoingHeaders){
-            return attrs
-        }
-        for (const [key, value] of Object.entries(outgoingHeaders)) {
-            attrs[`http.request.header.${key}`.toLowerCase()] = <string>value
+        if(this.requestHeaderCaptureEnabled) {
+            let outgoingHeaders = request.headers
+            if(!outgoingHeaders){
+                return attrs
+            }
+            for (const [key, value] of Object.entries(outgoingHeaders)) {
+                attrs[`http.request.header.${key}`.toLowerCase()] = <string>value
+            }
         }
         return attrs
     }
@@ -62,12 +73,25 @@ export class HttpInstrumentationWrapper {
 
 
     customAttrs(span: Span, request: ClientRequest | IncomingMessage, response: IncomingMessage | ServerResponse): void {
-        let headers = (<ServerResponse>response).getHeaders()
-        for (const [key, value] of Object.entries(headers)) {
-            span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
+        if(this.responseHeaderCaptureEnabled) {
+            let headers = (<ServerResponse>response).getHeaders()
+            for (const [key, value] of Object.entries(headers)) {
+                span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
+            }
         }
-        if (this.shouldCaptureBody((<ServerResponse>response).getHeaders())) {
+        if (this.shouldCaptureBody(this.responseBodyCaptureEnabled, (<ServerResponse>response).getHeaders())) {
+            let body: any[] = []
+            const listener = (chunk: any) => {
+                body.push(chunk)
+            }
 
+            response.on("data", listener);
+
+            response.once("end", () => {
+                request.removeListener('data', listener)
+                let parsedBody = Buffer.concat(body).toString();
+                span.setAttribute("http.response.body", parsedBody)
+            });
         }
     }
     CustomAttrs = this.customAttrs.bind(this)
@@ -92,8 +116,8 @@ export class HttpInstrumentationWrapper {
     }
     RespHook = this.respHook.bind(this)
 
-    shouldCaptureBody(headers: IncomingHttpHeaders | OutgoingHttpHeaders): boolean {
-        if (this.agentConfig.data_capture!.http_body!.request == false) {
+    private shouldCaptureBody(configField: boolean, headers: IncomingHttpHeaders | OutgoingHttpHeaders): boolean {
+        if (!configField) {
             return false
         }
         let contentType = headers['content-type']
@@ -102,7 +126,6 @@ export class HttpInstrumentationWrapper {
         }
         return this.recordableContentType(<string>contentType)
     }
-
 
     private recordableContentType(contentType?: string): boolean {
         if (contentType === undefined) {
