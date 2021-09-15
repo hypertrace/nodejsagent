@@ -11,7 +11,6 @@ hypertraceAgent.instrument()
 
 const express = require('express');
 var bodyParser = require('body-parser')
-const {ServerResponse} = require("http");
 
 // Constants
 const PORT = 8002;
@@ -33,7 +32,6 @@ app.get('/', (req, res) => {
 // curl -X POST -H "Content-Type: application/json" -d '{"a1":"v1","b1":"c1"}' localhost:8081/foo
 app.post('/foo', (req, res) => {
   res.setHeader("some-header", "asdf");
-  let a = ServerResponse
   res.send({ 'status': 'foo_success' });
 });
 

@@ -21,9 +21,9 @@ describe('Agent tests', () => {
         server.on('listening', () => {done()})
     })
 
-    after( async ()=> {
+    after( ()=> {
         server.close()
-        await agentTestWrapper.stop()
+        agentTestWrapper.stop()
     })
 
     it('can be initialized', async () => {
