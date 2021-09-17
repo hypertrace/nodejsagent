@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
 
 // curl -X POST -H "Content-Type: application/json" -d '{"a1":"v1","b1":"c1"}' localhost:8081/foo
 app.post('/foo', (req, res) => {
-  console.log(JSON.stringify(req.body));
+  res.setHeader("some-header", "asdf");
   res.send({ 'status': 'foo_success' });
 });
 

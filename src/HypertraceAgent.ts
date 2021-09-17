@@ -1,16 +1,16 @@
 import {NodeTracerProvider} from '@opentelemetry/node';
 import {BatchSpanProcessor, InMemorySpanExporter, SimpleSpanProcessor, SpanExporter} from '@opentelemetry/tracing';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
-import {Config} from '../config/config'
+import {Config} from './config/config'
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector";
-import {hypertrace} from "../config/generated";
+import {hypertrace} from "./config/generated";
 import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
-import {Span, TextMapPropagator} from "@opentelemetry/api";
-import {ClientRequest, IncomingMessage, ServerResponse} from "http";
+import {TextMapPropagator} from "@opentelemetry/api";
+import {HttpInstrumentationWrapper} from "./instrumentation/HttpInstrumentationWrapper";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -21,24 +21,35 @@ const {registerInstrumentations} = require('@opentelemetry/instrumentation');
 export class HypertraceAgent {
     _provider: NodeTracerProvider;
     public config: Config
-    public exporter: SpanExporter
+    public exporter: SpanExporter | undefined
 
     public constructor() {
         this.config = new Config()
         this._provider = this.setupTracingProvider()
+    }
+
+    instrument() : () => void {
+        this.setup()
+        let httpWrapper = new HttpInstrumentationWrapper(this.config.config)
+
+        return registerInstrumentations({
+            tracerProvider: this._provider,
+            instrumentations: [
+                new HttpInstrumentation({
+                    requestHook: httpWrapper.IncomingRequestHook,
+                    startOutgoingSpanHook: httpWrapper.OutgoingRequestHook,
+                    applyCustomAttributesOnSpan: httpWrapper.CustomAttrs,
+                    responseHook: httpWrapper.RespHook
+                }),
+                new ExpressInstrumentation({ ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]})
+            ]
+        });
+    }
+
+    setup(){
         this.exporter = this.setupExporter()
         this.setupPropagation()
         this._provider.register()
-    }
-
-    instrument() {
-        registerInstrumentations({
-            tracerProvider: this._provider,
-            instrumentations: [
-                new HttpInstrumentation(),
-                new ExpressInstrumentation({ ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]}),
-            ],
-        });
     }
 
 

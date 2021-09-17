@@ -1,33 +1,12 @@
-import supertest = require("supertest");
 import {AgentForTest} from "./AgentForTest";
-import {InMemorySpanExporter} from "@opentelemetry/tracing";
+const agentTestWrapper = AgentForTest.getInstance();
+agentTestWrapper.instrument()
+
 import {expect} from "chai";
 import * as http from "http";
-import express from "express";
-
-const httpRequest = {
-    get: (options: http.ClientRequestArgs | string) => {
-        return new Promise((resolve, reject) => {
-            return http.get(options, resp => {
-                let data = '';
-                resp.on('data', chunk => {
-                    data += chunk;
-                });
-                resp.on('end', () => {
-                    resolve(data);
-                });
-                resp.on('error', err => {
-                    reject(err);
-                });
-            });
-        });
-    },
-};
+import {httpRequest} from "./HttpRequest";
 
 describe('Agent tests', () => {
-    const agentTestWrapper = new AgentForTest();
-    agentTestWrapper.agent.instrument()
-
     const express = require('express');
 
     const app = express();
@@ -42,8 +21,9 @@ describe('Agent tests', () => {
         server.on('listening', () => {done()})
     })
 
-    after(()=> {
+    after( ()=> {
         server.close()
+        agentTestWrapper.stop()
     })
 
     it('can be initialized', async () => {
