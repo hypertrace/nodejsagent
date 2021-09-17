@@ -7,10 +7,11 @@ import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector";
 import {hypertrace} from "./config/generated";
-import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
+import {CompositePropagator, HttpTraceContextPropagator, isWrapped} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
 import {TextMapPropagator} from "@opentelemetry/api";
 import {HttpInstrumentationWrapper} from "./instrumentation/HttpInstrumentationWrapper";
+import {patchExpress} from "./instrumentation/wrapper/ExpressWrapper";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -18,13 +19,14 @@ const {SemanticResourceAttributes} = require('@opentelemetry/semantic-convention
 
 const {registerInstrumentations} = require('@opentelemetry/instrumentation');
 
+
 export class HypertraceAgent {
     _provider: NodeTracerProvider;
     public config: Config
     public exporter: SpanExporter | undefined
 
     public constructor() {
-        this.config = new Config()
+        this.config = Config.getInstance()
         this._provider = this.setupTracingProvider()
     }
 
@@ -32,7 +34,8 @@ export class HypertraceAgent {
         this.setup()
         let httpWrapper = new HttpInstrumentationWrapper(this.config.config)
 
-        return registerInstrumentations({
+        patchExpress()
+        let result = registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
                 new HttpInstrumentation({
@@ -44,6 +47,7 @@ export class HypertraceAgent {
                 new ExpressInstrumentation({ ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]})
             ]
         });
+        return result
     }
 
     setup(){
@@ -85,7 +89,7 @@ export class HypertraceAgent {
         let exporter = this.createExporter(this.config.config.reporting.trace_reporter_type)
 
         this._provider.addSpanProcessor(
-            new BatchSpanProcessor(exporter)
+            new SimpleSpanProcessor(exporter)
         );
         return exporter
     }

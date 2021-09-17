@@ -6,7 +6,8 @@ import {common} from "protobufjs";
 
 describe('Config tests', () => {
     it('checking default config', () => {
-        const config = new Config();
+        Config.reset()
+        const config = Config.getInstance()
         expect(config.config.service_name).to.equal('nodeagent')
         expect(config.config.enabled).to.equal(true)
         expect(config.config.propagation_formats).to.eql(['TRACECONTEXT'])
@@ -32,7 +33,8 @@ describe('Config tests', () => {
         let path = join(__dirname, 'config_file.yaml')
         process.env.HT_CONFIG_FILE=path
 
-        const config = new Config();
+        Config.reset()
+        const config = Config.getInstance()
         expect(config.config.service_name).to.equal('node_agent_001')
         expect(config.config.enabled).to.equal(false)
         expect(config.config.propagation_formats).to.eql(['B3'])
@@ -75,7 +77,8 @@ describe('Config tests', () => {
         process.env.HT_DATA_CAPTURE_RPC_BODY_RESPONSE = 'false'
         process.env.HT_DATA_CAPTURE_BODY_MAX_SIZE_BYTES = '5432109'
 
-        const config = new Config();
+        Config.reset()
+        const config = Config.getInstance()
         expect(config.config.service_name).to.equal('node_agent_env_001')
         expect(config.config.enabled).to.equal(false)
         expect(config.config.propagation_formats).to.eql(['B3', 'TRACECONTEXT'])

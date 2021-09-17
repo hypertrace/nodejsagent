@@ -9,10 +9,9 @@ var hypertrace = require('@hypertrace/nodejsagent');
 const hypertraceAgent = new hypertrace.HypertraceAgent()
 hypertraceAgent.instrument()
 
-const express = require('express');
+const express = require("express");
 var bodyParser = require('body-parser');
 var http = require('http');
-
 
 // Constants
 const PORT = 8001;

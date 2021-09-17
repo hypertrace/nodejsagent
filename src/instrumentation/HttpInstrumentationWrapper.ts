@@ -37,21 +37,20 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute(`http.request.header.${key}`, <string>value)
             }
         }
-
-        if (request instanceof IncomingMessage) {
-            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, request.headers)) {
-                let body: any[] = []
-                const listener = (chunk: any) => {
-                    body.push(chunk)
-                }
-                request.on("data", listener);
-
-                request.once("end", () => {
-                    request.removeListener('data', listener)
-                    let parsedBody = Buffer.concat(body).toString();
-                    span.setAttribute("http.request.body", parsedBody)
-                });
+        let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
+        if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
+            let body: any[] = []
+            const listener = (chunk: any) => {
+                body.push(chunk)
             }
+            request.on("data", listener);
+
+            request.once("end", () => {
+                request.removeListener('data', listener)
+                let parsedBody = Buffer.concat(body).toString();
+                // @ts-ignore
+                span.attributes["http.request.body"] = parsedBody
+            });
         }
     }
     IncomingRequestHook = this.incomingRequestHook.bind(this)
@@ -79,20 +78,6 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
         }
-        if (this.shouldCaptureBody(this.responseBodyCaptureEnabled, (<ServerResponse>response).getHeaders())) {
-            let body: any[] = []
-            const listener = (chunk: any) => {
-                body.push(chunk)
-            }
-
-            response.on("data", listener);
-
-            response.once("end", () => {
-                request.removeListener('data', listener)
-                let parsedBody = Buffer.concat(body).toString();
-                span.setAttribute("http.response.body", parsedBody)
-            });
-        }
     }
     CustomAttrs = this.customAttrs.bind(this)
 
@@ -102,6 +87,7 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
         }
+
     }
     RespHook = this.respHook.bind(this)
 
@@ -113,10 +99,10 @@ export class HttpInstrumentationWrapper {
         if (!contentType) {
             return false
         }
-        return this.recordableContentType(<string>contentType)
+        return HttpInstrumentationWrapper.isRecordableContentType(<string>contentType)
     }
 
-    private recordableContentType(contentType?: string): boolean {
+    public static isRecordableContentType(contentType?: string): boolean {
         if (contentType === undefined) {
             return false
         }
