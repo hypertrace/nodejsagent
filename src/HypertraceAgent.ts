@@ -1,5 +1,5 @@
 import {NodeTracerProvider} from '@opentelemetry/node';
-import {BatchSpanProcessor, InMemorySpanExporter, SimpleSpanProcessor, SpanExporter} from '@opentelemetry/tracing';
+import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/tracing';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
 import {Config} from './config/config'
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
@@ -35,7 +35,7 @@ export class HypertraceAgent {
         let httpWrapper = new HttpInstrumentationWrapper(this.config.config)
 
         patchExpress()
-        let result = registerInstrumentations({
+        return registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
                 new HttpInstrumentation({
@@ -47,7 +47,6 @@ export class HypertraceAgent {
                 new ExpressInstrumentation({ ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]})
             ]
         });
-        return result
     }
 
     setup(){
@@ -89,7 +88,7 @@ export class HypertraceAgent {
         let exporter = this.createExporter(this.config.config.reporting.trace_reporter_type)
 
         this._provider.addSpanProcessor(
-            new SimpleSpanProcessor(exporter)
+            new BatchSpanProcessor(exporter)
         );
         return exporter
     }
