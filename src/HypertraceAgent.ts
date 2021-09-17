@@ -12,6 +12,8 @@ import {B3Propagator} from "@opentelemetry/propagator-b3";
 import {TextMapPropagator} from "@opentelemetry/api";
 import {HttpInstrumentationWrapper} from "./instrumentation/HttpInstrumentationWrapper";
 import {patchExpress} from "./instrumentation/wrapper/ExpressWrapper";
+import {MySQLInstrumentation} from "@opentelemetry/instrumentation-mysql";
+import {MySQL2Instrumentation} from "@opentelemetry/instrumentation-mysql2";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -44,7 +46,9 @@ export class HypertraceAgent {
                     applyCustomAttributesOnSpan: httpWrapper.CustomAttrs,
                     responseHook: httpWrapper.RespHook
                 }),
-                new ExpressInstrumentation({ ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]})
+                new ExpressInstrumentation({ ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]}),
+                new MySQLInstrumentation(),
+                new MySQL2Instrumentation(),
             ]
         });
     }
