@@ -48,8 +48,7 @@ export class HttpInstrumentationWrapper {
             request.once("end", () => {
                 request.removeListener('data', listener)
                 let parsedBody = Buffer.concat(body).toString();
-                // @ts-ignore
-                span.attributes["http.request.body"] = parsedBody
+                span.setAttribute("http.request.body", parsedBody)
             });
         }
     }
