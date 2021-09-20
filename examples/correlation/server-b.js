@@ -1,9 +1,7 @@
 'use strict';
-
 /**
  * Require and initialize the @hypertrace/nodejsagent before all the other nodejs
  * imports.
- * Pass in the serviceName and collectorUrl in the config when initializing the agent.
  * */
 var hypertrace = require('@hypertrace/nodejsagent')
 const hypertraceAgent = new hypertrace.HypertraceAgent();

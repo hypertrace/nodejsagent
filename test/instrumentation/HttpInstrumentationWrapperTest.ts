@@ -8,12 +8,20 @@ import {httpRequest} from "./HttpRequest";
 
 describe('Agent tests', () => {
     const express = require('express');
+    let bodyParser = require('body-parser')
 
     const app = express();
+    app.use(bodyParser.urlencoded({ extended: false }))
+    app.use(bodyParser.json())
 
     app.get('/test', (req : any, res: any) => {
         res.send({ 'status': 'success' });
     })
+    app.post('/test_post', (req : any, res: any) => {
+        let d = req.body
+        res.send({ 'status': 'post_success' });
+    })
+
     let server = http.createServer(app)
 
     before((done)=> {
@@ -21,9 +29,12 @@ describe('Agent tests', () => {
         server.on('listening', () => {done()})
     })
 
-    after( ()=> {
-        server.close()
+    afterEach( ()=> {
         agentTestWrapper.stop()
+    })
+
+    after(()=> {
+        server.close()
     })
 
     it('can capture request & response headers', async () => {
@@ -31,7 +42,7 @@ describe('Agent tests', () => {
             "some-header": "a-value",
             "Another_Header": "another_value"
         }
-        const response = await httpRequest.get({headers: headers, host: 'localhost', port: 8000, path: '/test'})
+        await httpRequest.get({headers: headers, host: 'localhost', port: 8000, path: '/test'})
         let spans = agentTestWrapper.getSpans()
         expect(spans.length).to.equal(2)
         let requestSpanAttributes = spans[0].attributes
@@ -45,4 +56,22 @@ describe('Agent tests', () => {
         expect(serverSpanAttributes['http.request.header.another_header']).to.equal('another_value')
         expect(spans[1].name).to.equal('HTTP GET')
     });
+
+    it('can capture request & response bodies', async () => {
+        await httpRequest.post({
+            host: 'localhost',
+            port: 8000,
+            path: '/test_post',
+            headers: {
+                'content-type': "application/json"
+            }
+        },
+        JSON.stringify({"test": "req data"}))
+
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(2)
+        let serverSpan = spans[0]
+        expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
+        expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
+    })
 });

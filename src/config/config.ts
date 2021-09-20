@@ -8,10 +8,26 @@ import {hypertrace} from "./generated";
 
 
 export class Config {
-  config: any
-  constructor() {
+
+  private static instance: Config | undefined;
+  public config: any
+
+  private constructor() {
     let configData = this.load()
     this.config = hypertrace.agent.config.v1.AgentConfig.create(configData)
+  }
+
+  public static getInstance(): Config {
+    if (!Config.instance) {
+      Config.instance = new Config();
+    }
+
+    return Config.instance;
+  }
+
+  // Only needed for testing
+  public static reset() {
+    delete Config.instance
   }
 
   // Config order of precedence
