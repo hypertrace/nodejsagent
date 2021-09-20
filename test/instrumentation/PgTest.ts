@@ -1,4 +1,3 @@
-import {FieldInfo, MysqlError} from "mysql";
 import {AgentForTest} from "./AgentForTest";
 import {expect} from "chai";
 import {Client, Pool, QueryResult} from "pg";
