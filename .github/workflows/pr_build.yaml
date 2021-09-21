@@ -20,6 +20,6 @@ jobs:
       - name: Standup Test Docker Services
         run: cd ./test/externalServices && docker-compose up -d
       - name: Wait for Docker
-        run: sleep 60
+        run: sleep 120
       - name: Run Tests
         run: npm run test
