@@ -37,15 +37,16 @@ describe('Mysql2 test', () => {
             expect(spanAttrs['db.name']).to.equal('hypertrace')
             expect(spanAttrs['db.user']).to.equal('root')
             expect(spanAttrs['db.statement']).to.equal('SELECT 1 + 1 AS solution')
+            connection.end();
             done()
         });
-
-        connection.end();
-
     })
 })
 
 describe('Mysql test', () => {
+    afterEach(() => {
+        agentTestWrapper.stop()
+    })
     const mysql = require('mysql');
 
     // create the connection to database
@@ -70,10 +71,9 @@ describe('Mysql test', () => {
             expect(spanAttrs['db.name']).to.equal('hypertrace')
             expect(spanAttrs['db.user']).to.equal('root')
             expect(spanAttrs['db.statement']).to.equal('SELECT 1 + 1 AS solution')
+            connection.end();
             done()
         });
-
-        connection.end();
 
     })
 })
