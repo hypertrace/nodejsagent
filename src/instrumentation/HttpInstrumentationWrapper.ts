@@ -9,6 +9,7 @@ import {Span} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
 import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
+import {BodyCapture} from "./BodyCapture";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -20,6 +21,7 @@ export class HttpInstrumentationWrapper {
     private requestBodyCaptureEnabled: boolean
     private responseHeaderCaptureEnabled: boolean
     private responseBodyCaptureEnabled: boolean
+    private maxBodySizeBytes : number
 
     constructor(config: AgentConfig) {
         this.agentConfig = config
@@ -28,6 +30,7 @@ export class HttpInstrumentationWrapper {
         this.responseHeaderCaptureEnabled = <boolean>dataCapture!.http_headers!.response
         this.requestBodyCaptureEnabled = <boolean>dataCapture!.http_body!.request
         this.responseBodyCaptureEnabled = <boolean>dataCapture!.http_body!.response
+        this.maxBodySizeBytes = <number>dataCapture!.body_max_size_bytes!
     }
 
     incomingRequestHook(span: Span, request: ClientRequest | IncomingMessage) {
@@ -39,16 +42,16 @@ export class HttpInstrumentationWrapper {
         }
         let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
         if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-            let body: any[] = []
+            let bodyCapture : BodyCapture = new BodyCapture(this.maxBodySizeBytes)
             const listener = (chunk: any) => {
-                body.push(chunk)
+               bodyCapture.appendData(chunk)
             }
             request.on("data", listener);
 
             request.once("end", () => {
                 request.removeListener('data', listener)
-                let parsedBody = Buffer.concat(body).toString();
-                span.setAttribute("http.request.body", parsedBody)
+                let bodyString = bodyCapture.dataString()
+                span.setAttribute("http.request.body", bodyString)
             });
         }
     }

@@ -74,4 +74,23 @@ describe('Agent tests', () => {
         expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
         expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
     })
+
+    it('will respect max body request size', async () => {
+        agentTestWrapper.config.config.data_capture.body_max_size_bytes = 10
+        await httpRequest.post({
+                host: 'localhost',
+                port: 8000,
+                path: '/test_post',
+                headers: {
+                    'content-type': "application/json"
+                }
+            },
+            JSON.stringify({"test": "req data"}))
+
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(2)
+        let serverSpan = spans[0]
+        expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
+        expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
+    })
 });
