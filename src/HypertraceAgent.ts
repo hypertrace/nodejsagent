@@ -15,6 +15,7 @@ import {patchExpress} from "./instrumentation/wrapper/ExpressWrapper";
 import {MySQLInstrumentation} from "@opentelemetry/instrumentation-mysql";
 import {MySQL2Instrumentation} from "@opentelemetry/instrumentation-mysql2";
 import {PgInstrumentation} from "@opentelemetry/instrumentation-pg";
+import {MongoDBInstrumentation} from "@opentelemetry/instrumentation-mongodb";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -51,6 +52,7 @@ export class HypertraceAgent {
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),
                 new PgInstrumentation(),
+                new MongoDBInstrumentation()
             ]
         });
     }
