@@ -28,8 +28,7 @@ export class BodyCapture {
             let gapFill = chunk.slice(0, remainingSpace)
             this.data.push(gapFill)
             this.full = true
-
-        } // if we still have < chunk size but not at max size should take slice of data of difference between 2 valus
+        }
         this.currentSize += chunkSize
     }
 
