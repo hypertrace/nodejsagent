@@ -42,7 +42,7 @@ export class HttpInstrumentationWrapper {
         }
         let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
         if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-            let bodyCapture : BodyCapture = new BodyCapture(this.maxBodySizeBytes)
+            let bodyCapture : BodyCapture = new BodyCapture(<number>this.agentConfig!.data_capture!.body_max_size_bytes!)
             const listener = (chunk: any) => {
                bodyCapture.appendData(chunk)
             }

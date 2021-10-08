@@ -1,10 +1,13 @@
 import {AgentForTest} from "./AgentForTest";
+
 const agentTestWrapper = AgentForTest.getInstance()
 agentTestWrapper.instrument()
 
 import {expect} from "chai";
 import * as http from "http";
 import {httpRequest} from "./HttpRequest";
+import {Config} from "../../src";
+
 
 describe('Agent tests', () => {
     const express = require('express');
@@ -75,8 +78,9 @@ describe('Agent tests', () => {
         expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
     })
 
-    it('will respect max body request size', async () => {
-        agentTestWrapper.config.config.data_capture.body_max_size_bytes = 10
+    it('will collect only configured max body size', async () => {
+        let original = Config.getInstance().config.data_capture.body_max_size_bytes
+        Config.getInstance().config.data_capture.body_max_size_bytes = 10
         await httpRequest.post({
                 host: 'localhost',
                 port: 8000,
@@ -90,7 +94,8 @@ describe('Agent tests', () => {
         let spans = agentTestWrapper.getSpans()
         expect(spans.length).to.equal(2)
         let serverSpan = spans[0]
-        expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
-        expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
+        expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"r")
+        expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":")
+        Config.getInstance().config.data_capture.body_max_size_bytes = original
     })
 });

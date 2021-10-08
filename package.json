@@ -25,6 +25,7 @@
     "@opentelemetry/tracing": "0.24.0",
     "object-sizeof": "^1.6.1",
     "protobufjs": "^6.11.2",
+    "shimmer": "^1.2.1",
     "yaml": "^1.10.2"
   },
   "devDependencies": {
