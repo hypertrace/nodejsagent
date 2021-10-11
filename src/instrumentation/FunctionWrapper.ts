@@ -27,7 +27,16 @@ export class FunctionWrapper {
             return
         }
         this.parent[this.field] = this.parent[this.wrappedName()]
+        delete this.parent[this.wrappedName()]
         this.patched = false
+    }
+
+    isPatched(){
+        return this.patched
+    }
+
+    updateReplacer(replacer : Function){
+        this.replacer = replacer
     }
 
     private wrappedName() : string{
