@@ -6,6 +6,7 @@ export function getEnvValue(key: String): String | null{
         let envKeyWithPrefix = `${prefix}_${key}`
         if(envKeyWithPrefix in process.env) {
             return <string>process.env[envKeyWithPrefix]
+
         }
     }
     return null

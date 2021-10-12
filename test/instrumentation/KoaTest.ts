@@ -5,7 +5,7 @@ agentTestWrapper.instrument()
 
 import {expect} from "chai";
 import {httpRequest} from "./HttpRequest";
-import {Config} from "../../src";
+import {Config} from "../../src/config/config";
 
 describe('Koa tests', () => {
     const Koa = require('koa');

@@ -10,6 +10,7 @@ import {hypertrace} from "../config/generated";
 import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
+import {Config} from "../config/config";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -42,7 +43,7 @@ export class HttpInstrumentationWrapper {
         }
         let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
         if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-            let bodyCapture : BodyCapture = new BodyCapture(<number>this.agentConfig!.data_capture!.body_max_size_bytes!)
+            let bodyCapture : BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
             const listener = (chunk: any) => {
                bodyCapture.appendData(chunk)
             }
