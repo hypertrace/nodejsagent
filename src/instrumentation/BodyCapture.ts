@@ -13,12 +13,18 @@ export class BodyCapture {
     }
 
     appendData(chunk : any) {
+        if(!chunk) {
+            return
+        }
         if(this.full){
             return
         }
 
         let chunkSize = sizeof(chunk)
         if(!Buffer.isBuffer(chunk)) {
+            if(chunk instanceof Object){
+                chunk = JSON.stringify(chunk)
+            }
             chunk = Buffer.from(chunk)
         }
         if(this.currentSize + chunkSize <= this.maxSize) {
