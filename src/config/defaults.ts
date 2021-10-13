@@ -1,4 +1,4 @@
-export const DEFAULT_AGENT_CONFIG = {
+const DEFAULT_AGENT_CONFIG = {
     'enabled': true,
     'propagation_formats': ['TRACECONTEXT'],
     'service_name': 'nodeagent',
@@ -33,4 +33,8 @@ export const DEFAULT_AGENT_CONFIG = {
         'body_max_size_bytes': 131072
     },
     'resource_attributes': {}
+}
+
+export function getDefaultConfigValues(){
+    return JSON.parse(JSON.stringify(DEFAULT_AGENT_CONFIG));
 }

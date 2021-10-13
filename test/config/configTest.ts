@@ -1,10 +1,16 @@
 import {Config} from '../../src/config/config'
 import { expect } from 'chai';
 import {join} from "path";
-import {hypertrace} from "../../src/config/generated";
-import {common} from "protobufjs";
 
 describe('Config tests', () => {
+    const env = Object.assign({}, process.env);
+
+    after(() => {
+        Config.reset()
+        Config.getInstance()
+        process.env = env;
+    });
+
     it('checking default config', () => {
         Config.reset()
         const config = Config.getInstance()
@@ -76,7 +82,6 @@ describe('Config tests', () => {
         process.env.HT_DATA_CAPTURE_RPC_BODY_REQUEST = 'false'
         process.env.HT_DATA_CAPTURE_RPC_BODY_RESPONSE = 'false'
         process.env.HT_DATA_CAPTURE_BODY_MAX_SIZE_BYTES = '5432109'
-
         Config.reset()
         const config = Config.getInstance()
         expect(config.config.service_name).to.equal('node_agent_env_001')
@@ -96,6 +101,24 @@ describe('Config tests', () => {
         expect(config.config.data_capture.rpc_body.request).to.equal(false)
         expect(config.config.data_capture.rpc_body.response).to.equal(false)
         expect(config.config.data_capture.body_max_size_bytes).to.equal(5432109)
+
+        delete process.env.HT_SERVICE_NAME
+        delete process.env.HT_ENABLED
+        delete process.env.HT_PROPAGATION_FORMATS
+
+        delete process.env.HT_REPORTING_SECURE
+        delete process.env.HT_REPORTING_ENDPOINT
+        delete process.env.HT_REPORTING_TRACE_REPORTER_TYPE
+
+        delete process.env.HT_DATA_CAPTURE_HTTP_HEADERS_REQUEST
+        delete process.env.HT_DATA_CAPTURE_HTTP_HEADERS_RESPONSE
+        delete process.env.HT_DATA_CAPTURE_HTTP_BODY_REQUEST
+        delete process.env.HT_DATA_CAPTURE_HTTP_BODY_RESPONSE
+        delete process.env.HT_DATA_CAPTURE_RPC_METADATA_REQUEST
+        delete process.env.HT_DATA_CAPTURE_RPC_METADATA_RESPONSE
+        delete process.env.HT_DATA_CAPTURE_RPC_BODY_REQUEST
+        delete process.env.HT_DATA_CAPTURE_RPC_BODY_RESPONSE
+        delete process.env.HT_DATA_CAPTURE_BODY_MAX_SIZE_BYTES
     });
 
 });

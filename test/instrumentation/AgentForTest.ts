@@ -1,5 +1,6 @@
 // This allows us to instantiate an agent that comes prepared with an InMemorySpanExporter
 import {HypertraceAgent} from "../../src";
+import {Config} from '../../src/config/config'
 import {
     InMemorySpanExporter,
     ReadableSpan,
@@ -41,5 +42,7 @@ export class AgentForTest extends HypertraceAgent {
 
     stop() {
         (<InMemorySpanExporter>this.exporter!).reset()
+        Config.reset()
+        Config.getInstance()
     }
 }

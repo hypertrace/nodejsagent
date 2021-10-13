@@ -1,5 +1,5 @@
 // import { AgentConfig } from "../../agent-config/proto/hypertrace/agent/config/v1/config_pb";
-import {DEFAULT_AGENT_CONFIG} from "./defaults";
+import {getDefaultConfigValues} from "./defaults";
 import {getEnvValue} from "./envSettings";
 import {PathOrFileDescriptor, readFileSync} from 'fs';
 import YAML from 'yaml'
@@ -35,7 +35,7 @@ export class Config {
   // 2.) Overwritten by config file
   // 3.) Overwritten by env vars
   load(): object {
-    let configObj = DEFAULT_AGENT_CONFIG
+    let configObj = Config.mergeConfig({}, getDefaultConfigValues())
     let fileObj = Config.loadFromFile()
     if(fileObj){
       configObj = Config.mergeConfig(configObj, fileObj)
