@@ -28,9 +28,9 @@ export function koaResponseCallback(context: any, span: any) {
     if(!span){
         return
     }
-    let reqHeaders = context.res.getHeaders()
-    if(Config.getInstance().config.data_capture.http_headers.response, reqHeaders) {
-        for (const [key, value] of Object.entries(reqHeaders)) {
+    let resHeaders = context.res.getHeaders()
+    if(Config.getInstance().config.data_capture.http_headers.response, resHeaders) {
+        for (const [key, value] of Object.entries(resHeaders)) {
             span.setAttribute(`http.response.header.${key}`, <string>value)
         }
     }
@@ -38,7 +38,7 @@ export function koaResponseCallback(context: any, span: any) {
     const respBodyCaptureEnabled = Config.getInstance().config.data_capture.http_body.response
     if(!respBodyCaptureEnabled) { return }
 
-    if(HttpInstrumentationWrapper.isRecordableContentType(reqHeaders['content-type'])) {
+    if(HttpInstrumentationWrapper.isRecordableContentType(resHeaders['content-type'])) {
         const bodyData = context.response._body
         if(bodyData){
             let bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes);
