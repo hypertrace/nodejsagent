@@ -1,4 +1,4 @@
-import * as express from 'express'
+const express = require("express");
 import {context, trace} from "@opentelemetry/api";
 import {FunctionWrapper} from "../FunctionWrapper";
 import {Config} from "../../config/config";

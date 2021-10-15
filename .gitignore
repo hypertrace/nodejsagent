@@ -3,6 +3,7 @@
 /tmp
 /out-tsc
 build
+/lib
 
 # Generated js
 # TODO: Is there a better way to do it
