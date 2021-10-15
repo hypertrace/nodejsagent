@@ -6,7 +6,7 @@ agentTestWrapper.instrument()
 import {expect} from "chai";
 import * as http from "http";
 import {httpRequest} from "./HttpRequest";
-import {Config} from "../../src";
+import {Config} from "../../src/config/config";
 
 
 describe('Agent tests', () => {

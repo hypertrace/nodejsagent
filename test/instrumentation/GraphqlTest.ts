@@ -55,6 +55,10 @@ describe('Graphql Apollo tests', () => {
         agentTestWrapper.stop()
     })
 
+    afterEach(() => {
+        agentTestWrapper.stop()
+    })
+
     after(async () => {
         await server.stop()
     })
