@@ -25,7 +25,7 @@ describe('Agent tests', () => {
         res.send({ 'status': 'post_success' });
     })
 
-    app.get('/circular-test', async (req : any, res: any) => {
+    app.get('/circular-test', (req : any, res: any) => {
         http.request({ host: 'localhost', port: 8001, path: '/test' }, (res2) => {
             var str = "";
 
