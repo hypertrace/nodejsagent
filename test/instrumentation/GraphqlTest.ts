@@ -5,24 +5,27 @@ agentTestWrapper.instrument()
 
 import {expect} from "chai";
 import {httpRequest} from "./HttpRequest";
-import { sha256 } from 'crypto-hash';
+import {sha256} from 'crypto-hash';
+import http from "http";
+
+
+const books = [
+    {
+        title: 'The Awakening',
+        author: 'Kate Chopin',
+    },
+    {
+        title: 'City of Glass',
+        author: 'Paul Auster',
+    },
+];
 
 describe('Graphql Apollo tests', () => {
-    if(process.version.startsWith('v8')){
+    if (process.version.startsWith('v8')) {
         // apollo requires node v10+ & fails to run on node <v10
         return
     }
     const {ApolloServer, gql} = require('apollo-server');
-    const books = [
-        {
-            title: 'The Awakening',
-            author: 'Kate Chopin',
-        },
-        {
-            title: 'City of Glass',
-            author: 'Paul Auster',
-        },
-    ];
 
     const typeDefs = gql`
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -46,8 +49,8 @@ describe('Graphql Apollo tests', () => {
         },
     };
 
-    const server = new ApolloServer({ typeDefs, resolvers });
-    before( (done) => {
+    const server = new ApolloServer({typeDefs, resolvers});
+    before((done) => {
         //agentTestWrapper.stop() // need to reset memory exporter because defining graphql scheme creates some spans
         server.listen().then(() => {
             console.log("server started")
@@ -72,12 +75,12 @@ describe('Graphql Apollo tests', () => {
             "content-type": "application/json"
         }
         await httpRequest.post({
-            headers: headers,
-            host: 'localhost',
-            port: 4000,
-            path: '/graphql'
+                headers: headers,
+                host: 'localhost',
+                port: 4000,
+                path: '/graphql'
             },
-            JSON.stringify({"query":"query { __typename }"})
+            JSON.stringify({"query": "query { __typename }"})
         )
         let spans = agentTestWrapper.getSpans()
         expect(spans.length).to.equal(6)
@@ -173,3 +176,80 @@ describe('Graphql Apollo tests', () => {
         expect(resolveSpan.attributes['graphql.source']).to.equal('books {title author}')
     })
 });
+
+describe('Plain graphql tests', () => {
+    const express = require('express');
+    const {graphqlHTTP} = require('express-graphql');
+    const {buildSchema} = require('graphql');
+
+// Construct a schema, using GraphQL schema language
+    var schema = buildSchema(`
+  type Book {
+    title: String
+    author: String
+  }
+  type Query {
+    books: [Book]
+  }
+`);
+
+// The root provides a resolver function for each API endpoint
+    let root = {
+        books: () => {
+            return books;
+        },
+    };
+
+    let app = express();
+    app.use('/graphql', graphqlHTTP({
+        schema: schema,
+        rootValue: root,
+        graphiql: true,
+    }));
+    let server = http.createServer(app)
+    before(async () => {
+        await server.listen(4001)
+    })
+    beforeEach(() => {
+        agentTestWrapper.stop()
+    })
+
+    afterEach(() => {
+        agentTestWrapper.stop()
+    })
+    after(() => {
+        server.close()
+    })
+
+    it('can capture graphql span attrs', async () => {
+        let headers = {
+            "content-type": "application/json"
+        }
+        await httpRequest.post({
+                headers: headers,
+                host: 'localhost',
+                port: 4001,
+                path: '/graphql'
+            },
+            JSON.stringify({"query": "query { __typename }"})
+        )
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(5)
+
+        let graphqlParseSpan = spans[0]
+        expect(graphqlParseSpan.name).to.equal('graphql.parse')
+        expect(graphqlParseSpan.attributes['graphql.source']).to.equal('query { __typename }')
+
+        let graphqlValidateSpan = spans[1]
+        expect(graphqlValidateSpan.name).to.equal('graphql.validate')
+
+        let graphqlExecuteSpan = spans[2]
+        expect(graphqlExecuteSpan.name).to.equal('graphql.execute')
+        expect(graphqlExecuteSpan.attributes['graphql.operation.name']).to.equal('query')
+        expect(graphqlExecuteSpan.attributes['graphql.source']).to.equal('query { __typename }')
+
+        let serverSpan = spans[3]
+        expect(serverSpan.attributes['http.request.body']).to.equal("{\"query\":\"query { __typename }\"}")
+        expect(serverSpan.attributes['http.response.body']).to.equal("{\"data\":{\"__typename\":\"Query\"}}")
+    });
+})
