@@ -20,6 +20,8 @@ import {KoaHypertraceInstrumentation} from "./instrumentation/KoaHypertraceInstr
 import {KoaLayerType} from "@opentelemetry/instrumentation-koa/build/src/types";
 import {koaRequestCallback, koaResponseCallback} from "./instrumentation/wrapper/KoaWrapper";
 import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
+import {logger} from "./Logging";
+import {version} from "./Version";
 
 const api = require("@opentelemetry/api");
 
@@ -35,8 +37,12 @@ export class HypertraceAgent {
     public exporter: SpanExporter | undefined
 
     public constructor() {
+        logger.info("Initializing Hypertrace Agent")
+        logger.info(`Hypertrace Version: ${version}`)
+        logger.info(`Node version: ${process.version}`)
         this.config = Config.getInstance()
         this._provider = this.setupTracingProvider()
+        logger.info("Successfully initialized Hypertrace Agent")
     }
 
     instrument(): () => void {
@@ -72,6 +78,7 @@ export class HypertraceAgent {
         this.exporter = this.setupExporter()
         this.setupPropagation()
         this._provider.register()
+        logger.debug(`provider registered`)
     }
 
 
@@ -80,7 +87,7 @@ export class HypertraceAgent {
             resource: new Resource({
                 'service.name': this.config.config.service_name,
                 'service.instance.id': process.pid,
-                'telemetry.sdk.version': '0.0.0', // TODO - needs to pull from package.json
+                'telemetry.sdk.version': version,
                 'telemetry.sdk.name': 'hypertrace',
                 'telemetry.sdk.language': 'nodejs'
             })
@@ -92,8 +99,10 @@ export class HypertraceAgent {
         let formats: TextMapPropagator[] = []
         for (let propagationType of this.config.config.propagation_formats) {
             if (propagationType == 'TRACECONTEXT') {
+                logger.debug(`Adding tracecontext propagator`)
                 formats.push(new HttpTraceContextPropagator())
             } else if (propagationType == "B3") {
+                logger.debug(`Adding b3 propagator`)
                 formats.push(new B3Propagator())
             }
         }
@@ -114,12 +123,15 @@ export class HypertraceAgent {
 
     protected createExporter(traceReporterType: string): SpanExporter {
         if (traceReporterType == 'ZIPKIN') {
+            logger.info(`Creating zipkin exporter reporting to: ${this.config.config.reporting.endpoint}`)
             return new ZipkinExporter({
                 url: this.config.config.reporting.endpoint
             })
         } else if (traceReporterType == 'LOGGING') {
+            logger.info(`Creating in memory exporter`)
             return new InMemorySpanExporter()
         } else {
+            logger.info(`Creating OTLP exporter reporting to: ${this.config.config.reporting.endpoint}`)
             return new CollectorTraceExporter({
                 url: this.config.config.reporting.endpoint
             })

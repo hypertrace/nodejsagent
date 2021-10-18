@@ -32,6 +32,7 @@
     "object-sizeof": "^1.6.1",
     "protobufjs": "^6.11.2",
     "shimmer": "^1.2.1",
+    "winston": "^3.3.3",
     "yaml": "^1.10.2"
   },
   "devDependencies": {
@@ -65,7 +66,7 @@
     "typescript-tslint-plugin": "^0.5.5"
   },
   "scripts": {
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'test/**/*.ts'",
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' HT_LOG_LEVEL=DEBUG mocha -r ts-node/register 'test/**/*.ts'",
     "build": "tsc && cp src/config/generated.* ./lib/config && npm pack",
     "generate_pb": "pbjs --keep-case -t static-module -w default -o src/config/generated.js agent-config/proto/hypertrace/agent/config/v1/config.proto && pbts --keep-case -o ./src/config/generated.d.ts ./src/config/generated.js"
   }
