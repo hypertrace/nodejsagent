@@ -22,7 +22,7 @@ const books = [
 
 describe('Graphql Apollo tests', () => {
     if (process.version.startsWith('v8')) {
-        // apollo requires node v10+ & fails to run on node <v10
+        // express-graphql requires node v10+ & fails on node <v10
         return
     }
     const {ApolloServer, gql} = require('apollo-server');
