@@ -4,17 +4,21 @@
   "description": "Hypertrace Node.js Agent",
   "author": "Traceable Inc.",
   "license": "Apache-2.0",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/hypertrace/nodejsagent"
   },
+  "files": [
+    "lib/**/*"
+  ],
   "dependencies": {
     "@opentelemetry/api": "1.0.3",
     "@opentelemetry/core": "0.24.0",
     "@opentelemetry/exporter-collector": "^0.24.0",
     "@opentelemetry/exporter-zipkin": "0.24.0",
     "@opentelemetry/instrumentation-express": "0.24.0",
+    "@opentelemetry/instrumentation-graphql": "^0.25.0",
     "@opentelemetry/instrumentation-http": "0.24.0",
     "@opentelemetry/instrumentation-koa": "^0.24.0",
     "@opentelemetry/instrumentation-mongodb": "^0.25.0",
@@ -24,21 +28,28 @@
     "@opentelemetry/node": "0.24.0",
     "@opentelemetry/propagator-b3": "^0.24.0",
     "@opentelemetry/tracing": "0.24.0",
+    "crypto-hash": "^1.3.0",
     "object-sizeof": "^1.6.1",
     "protobufjs": "^6.11.2",
     "shimmer": "^1.2.1",
     "yaml": "^1.10.2"
   },
   "devDependencies": {
+    "@apollo/client": "^3.4.16",
     "@types/chai": "^4.2.21",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.10.2",
     "@types/pg": "^8.6.1",
     "@types/supertest": "^2.0.11",
+    "apollo-server": "^3.4.0",
     "body-parser": "^1.19.0",
     "chai": "^4.3.4",
+    "core-js": "^3.18.3",
     "eslint": "7.14.0",
     "express": "^4.17.1",
+    "express-graphql": "^0.12.0",
+    "graphql": "^15.6.1",
+    "graphql-relay": "^0.9.0",
     "koa": "^2.13.3",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.1.1",
@@ -50,11 +61,12 @@
     "supertest": "^6.1.6",
     "ts-node": "~9.0.0",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "4.1.2",
+    "typescript": "^4.1.2",
     "typescript-tslint-plugin": "^0.5.5"
   },
   "scripts": {
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'test/**/*.ts'",
+    "build": "tsc && cp src/config/generated.* ./lib/config && npm pack",
     "generate_pb": "pbjs --keep-case -t static-module -w default -o src/config/generated.js agent-config/proto/hypertrace/agent/config/v1/config.proto && pbts --keep-case -o ./src/config/generated.d.ts ./src/config/generated.js"
   }
 }

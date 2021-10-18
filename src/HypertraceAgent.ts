@@ -19,6 +19,7 @@ import {MongoDBInstrumentation} from "@opentelemetry/instrumentation-mongodb";
 import {KoaHypertraceInstrumentation} from "./instrumentation/KoaHypertraceInstrumentation";
 import {KoaLayerType} from "@opentelemetry/instrumentation-koa/build/src/types";
 import {koaRequestCallback, koaResponseCallback} from "./instrumentation/wrapper/KoaWrapper";
+import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 
 const api = require("@opentelemetry/api");
 
@@ -58,6 +59,7 @@ export class HypertraceAgent {
                     requestCallback: koaRequestCallback,
                     responseCallback: koaResponseCallback
                 }),
+                new GraphQLInstrumentation(),
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),
                 new PgInstrumentation(),
@@ -76,11 +78,11 @@ export class HypertraceAgent {
     private setupTracingProvider(): NodeTracerProvider {
         return new NodeTracerProvider({
             resource: new Resource({
-                [SemanticResourceAttributes.SERVICE_NAME]: this.config.config.service_name,
+                'service.name': this.config.config.service_name,
                 'service.instance.id': process.pid,
                 'telemetry.sdk.version': '0.0.0', // TODO - needs to pull from package.json
                 'telemetry.sdk.name': 'hypertrace',
-                'telemetry.sdk.language': 'node'
+                'telemetry.sdk.language': 'nodejs'
             })
             // TODO - append custom attributes from config
         })

@@ -1,2 +1,2 @@
-export * from './HypertraceAgent';
-export * from './config/config';
+import {HypertraceAgent} from "./HypertraceAgent";
+module.exports = HypertraceAgent;

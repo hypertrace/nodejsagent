@@ -3,8 +3,8 @@
  * Require and initialize the @hypertrace/nodejsagent before all the other nodejs
  * imports.
  * */
-var hypertrace = require('@hypertrace/nodejsagent')
-const hypertraceAgent = new hypertrace.HypertraceAgent();
+const HypertraceAgent = require('@hypertrace/nodejsagent');
+const hypertraceAgent = new HypertraceAgent()
 hypertraceAgent.instrument()
 
 const express = require('express');

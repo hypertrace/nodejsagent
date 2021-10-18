@@ -1,5 +1,5 @@
 // This allows us to instantiate an agent that comes prepared with an InMemorySpanExporter
-import {HypertraceAgent} from "../../src";
+import {HypertraceAgent} from "../../src/HypertraceAgent";
 import {Config} from '../../src/config/config'
 import {
     InMemorySpanExporter,
@@ -28,7 +28,9 @@ export class AgentForTest extends HypertraceAgent {
     }
 
     protected createExporter(traceReporterType: string): SpanExporter {
-        return new InMemorySpanExporter();
+        //return new CollectorTraceExporter({url: 'http://localhost:4317'});
+        //return new ZipkinExporter({url: 'http://localhost:9411/api/v2/spans'})
+        return new InMemorySpanExporter()
     }
 
     protected setupExporter(): SpanExporter {

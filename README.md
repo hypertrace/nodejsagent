@@ -6,9 +6,9 @@
 ## Development
 
 ### Developing locally
+Then run: `npm run build`, you can then install the generated .tgz as a normal dependency.
 
-From the root of this project, run `tsc`.
-Then run: `npm link @hypertrace/nodejsagent`
+_Note: Using npm link doesnt solve the local testing problem as it will use the hypertrace package dev-dependencies during instrumentation instead of the targetted node app_
 
 You can then run or debug the example application in the `examples` directory. 
 
