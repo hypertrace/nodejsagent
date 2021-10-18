@@ -26,7 +26,7 @@ describe('Agent tests', () => {
     })
 
     app.get('/circular-test', (req : any, res: any) => {
-        http.request({ host: 'localhost', port: 8001, path: '/test' }, (res2) => {
+        http.request({ host: '0.0.0.0', port: 8001, path: '/test' }, (res2) => {
             var str = "";
 
             res2.on('data', (chunk) => {
