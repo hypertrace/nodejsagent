@@ -133,7 +133,7 @@ export class HypertraceAgent {
         } else {
             logger.info(`Creating OTLP exporter reporting to: ${this.config.config.reporting.endpoint}`)
             return new CollectorTraceExporter({
-                url: this.config.config.reporting.endpoint,
+                url: this.config.config.reporting.endpoint
             })
         }
     }
