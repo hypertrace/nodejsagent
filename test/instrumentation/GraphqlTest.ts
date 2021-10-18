@@ -2,7 +2,7 @@ import {AgentForTest} from "./AgentForTest";
 
 const agentTestWrapper = AgentForTest.getInstance()
 agentTestWrapper.instrument()
-
+import "core-js/features/array/flat-map";
 import {expect} from "chai";
 import {httpRequest} from "./HttpRequest";
 import {sha256} from 'crypto-hash';
