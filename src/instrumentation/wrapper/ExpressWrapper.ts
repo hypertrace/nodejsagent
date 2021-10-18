@@ -1,6 +1,7 @@
+import {htLogger} from "../../Logging";
+
 const express = require("express");
 import {context, trace} from "@opentelemetry/api";
-import {FunctionWrapper} from "../FunctionWrapper";
 import {Config} from "../../config/config";
 import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
 import {BodyCapture} from "../BodyCapture";
