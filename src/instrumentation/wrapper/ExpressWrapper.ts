@@ -1,4 +1,4 @@
-import {htLogger} from "../../Logging";
+import {logger} from "../../Logging";
 
 const express = require("express");
 import {context, trace} from "@opentelemetry/api";

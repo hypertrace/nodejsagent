@@ -5,7 +5,7 @@ import {PathOrFileDescriptor, readFileSync} from 'fs';
 import YAML from 'yaml'
 import {loadFromEnv} from "./envConfigReader";
 import {hypertrace} from "./generated";
-import {htLogger} from "../Logging";
+import {logger} from "../Logging";
 
 
 export class Config {
@@ -36,7 +36,7 @@ export class Config {
   // 2.) Overwritten by config file
   // 3.) Overwritten by env vars
   load(): object {
-    htLogger.debug("Loading configuration")
+    logger.debug("Loading configuration")
     let configObj = Config.mergeConfig({}, getDefaultConfigValues())
     let fileObj = Config.loadFromFile()
     if(fileObj){
@@ -44,16 +44,16 @@ export class Config {
     }
     let envObj = loadFromEnv()
     configObj = Config.mergeConfig(configObj, envObj)
-    htLogger.debug(`Configuration loaded with finalized values: ${JSON.stringify(configObj)}`)
+    logger.debug(`Configuration loaded with finalized values: ${JSON.stringify(configObj)}`)
     return configObj
   }
 
   private static loadFromFile(): object | null{
     let envPath = getEnvValue('CONFIG_FILE')
     if(envPath){
-      htLogger.debug(`Attempting to load log from configured path: ${envPath}`)
+      logger.debug(`Attempting to load log from configured path: ${envPath}`)
       const fileContents = readFileSync(<PathOrFileDescriptor>envPath, 'utf-8')
-      htLogger.debug(`Successfully loaded config from file`)
+      logger.debug(`Successfully loaded config from file`)
       return YAML.parse(fileContents)
     }
     return null

@@ -1,5 +1,6 @@
-import winston, {transports} from "winston";
+import winston, {format, transports} from "winston";
 import {getEnvValue} from "./config/envSettings";
+const { combine, timestamp, label, printf } = format;
 
 const validLogLevels = ['debug', 'info', 'warn', 'error']
 let configuredLogLevel = getEnvValue('LOG_LEVEL')
@@ -11,12 +12,17 @@ if(configuredLogLevel == null) {
         configuredLogLevel = 'info'
     }
 }
+const myFormat = printf(({ level, message, label, timestamp }) => {
+    return `${timestamp} [${label}] ${level}: ${message}`;
+});
 
-export const htLogger = winston.createLogger({
-    transports: [
-        new transports.Console({
-            level: <string>configuredLogLevel,
-            format: winston.format.simple(),
-        })
-    ]
+export const logger = winston.createLogger({
+    format: combine(
+        label({ label: 'hypertrace' }),
+        timestamp(),
+        myFormat
+    ),
+    transports: [new transports.Console({
+        level: <string>configuredLogLevel,
+    })]
 });
