@@ -5,7 +5,6 @@ import {Config} from './config/config'
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
-import {CollectorTraceExporter} from "@opentelemetry/exporter-collector";
 import {hypertrace} from "./config/generated";
 import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
@@ -22,6 +21,7 @@ import {koaRequestCallback, koaResponseCallback} from "./instrumentation/wrapper
 import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 import {logger} from "./Logging";
 import {version} from "./Version";
+import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 
 const api = require("@opentelemetry/api");
 
@@ -133,7 +133,7 @@ export class HypertraceAgent {
         } else {
             logger.info(`Creating OTLP exporter reporting to: ${this.config.config.reporting.endpoint}`)
             return new CollectorTraceExporter({
-                url: this.config.config.reporting.endpoint
+                url: this.config.config.reporting.endpoint,
             })
         }
     }
