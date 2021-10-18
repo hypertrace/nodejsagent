@@ -25,6 +25,22 @@ describe('Agent tests', () => {
         res.send({ 'status': 'post_success' });
     })
 
+    app.get('/circular-test', (req : any, res: any) => {
+        http.request({ host: 'localhost', port: 8000, path: '/test' }, (res2) => {
+            var str = "";
+
+            res2.on('data', (chunk) => {
+                str += chunk;
+            })
+
+            res2.on('end', () => {
+                console.log(str);
+                res.setHeader("Content-Type", "application/json");
+                res.send(str);
+            })
+        }).end()
+    })
+
     let server = http.createServer(app)
 
     before((done)=> {
@@ -97,5 +113,27 @@ describe('Agent tests', () => {
         expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"r")
         expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":")
         Config.getInstance().config.data_capture.body_max_size_bytes = original
+    })
+
+    it('will collect child http client request details', async () => {
+        await httpRequest.get({
+                host: 'localhost',
+                port: 8000,
+                path: '/circular-test',
+                headers: {
+                    'content-type': "application/json"
+                }
+            })
+
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(4)
+        let internalServerSpan = spans[0]
+        expect(internalServerSpan.attributes['http.response.body']).to.equal("{\"status\":\"success\"}")
+
+        let originalServerSpan = spans[1]
+        expect(originalServerSpan.attributes['http.response.body']).to.equal("{\"status\":\"success\"}")
+
+        let internalRequestSpan = spans[2]
+        expect(internalRequestSpan.attributes['http.response.body']).to.equal("{\"status\":\"success\"}")
     })
 });
