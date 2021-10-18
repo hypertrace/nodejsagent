@@ -26,7 +26,7 @@ describe('Agent tests', () => {
     })
 
     app.get('/circular-test', (req : any, res: any) => {
-        http.request({ host: '0.0.0.0', port: 8001, path: '/test' }, (res2) => {
+        http.request({ host: 'localhost', port: 8000, path: '/test' }, (res2) => {
             var str = "";
 
             res2.on('data', (chunk) => {
@@ -126,14 +126,14 @@ describe('Agent tests', () => {
             })
 
         let spans = agentTestWrapper.getSpans()
-        expect(spans.length).to.equal(3)
+        expect(spans.length).to.equal(4)
         let internalServerSpan = spans[0]
-        expect(internalServerSpan.attributes['http.response.body']).to.equal("{\"status\":\"get_success\"}")
+        expect(internalServerSpan.attributes['http.response.body']).to.equal("{\"status\":\"success\"}")
 
         let originalServerSpan = spans[1]
-        expect(originalServerSpan.attributes['http.response.body']).to.equal("{\"status\":\"get_success\"}")
+        expect(originalServerSpan.attributes['http.response.body']).to.equal("{\"status\":\"success\"}")
 
         let internalRequestSpan = spans[2]
-        expect(internalRequestSpan.attributes['http.response.body']).to.equal("{\"status\":\"get_success\"}")
+        expect(internalRequestSpan.attributes['http.response.body']).to.equal("{\"status\":\"success\"}")
     })
 });
