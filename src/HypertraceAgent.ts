@@ -26,7 +26,6 @@ import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
-const {SemanticResourceAttributes} = require('@opentelemetry/semantic-conventions');
 
 const {registerInstrumentations} = require('@opentelemetry/instrumentation');
 
