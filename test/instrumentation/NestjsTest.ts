@@ -95,8 +95,12 @@ if(!['v8', 'v10'].some((nodeVersion) => {process.version.startsWith(nodeVersion)
             expect(spans.length).to.equal(2)
 
             let serverSpan = spans[0].attributes
+            expect(serverSpan['http.request.body']).to.equal("{\"data\":\"some_data\"}")
             expect(serverSpan['http.response.body']).to.equal("{\"msg\":\"success\",\"data\":\"some_data\"}")
-            expect(serverSpan['http.response.body']).to.equal("{\"msg\":\"success\",\"data\":\"some_data\"}")
+
+            let requestSpan = spans[1]
+            expect(requestSpan.attributes['http.request.body']).to.eql("{\"data\":\"some_data\"}")
+            expect(requestSpan.attributes['http.response.body']).to.eql("{\"msg\":\"success\",\"data\":\"some_data\"}")
         });
     });
 }
