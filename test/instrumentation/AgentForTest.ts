@@ -15,6 +15,10 @@ export class AgentForTest extends HypertraceAgent {
         super()
     }
 
+    public static renew() {
+        AgentForTest.instance = new AgentForTest()
+    }
+
     public static getInstance(): AgentForTest {
         if (!AgentForTest.instance) {
             AgentForTest.instance = new AgentForTest();
