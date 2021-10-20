@@ -5,7 +5,7 @@
   "author": "First Last <first.last@example.com>",
   "main": "server.js",
   "scripts": {
-    "start": "HT_SERVICE_NAME=server_1 HT_CONFIG_FILE=./config.yaml node server-a.js",
+    "start": "HT_SERVICE_NAME=server_1 HT_CONFIG_FILE=./config.yaml node -r @hypertrace/nodejsagent server-a.js",
     "start2": "HT_SERVICE_NAME=server_2 HT_CONFIG_FILE=./config.yaml node server-b.js",
     "start3": "HT_SERVICE_NAME=graphql_server HT_CONFIG_FILE=./config.yaml node graphql-server.js"
   },

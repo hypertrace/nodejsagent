@@ -5,10 +5,6 @@
  * imports.
  * Pass in the serviceName and collectorUrl in the config when initializing the agent.
  * */
-const HypertraceAgent = require('@hypertrace/nodejsagent');
-const hypertraceAgent = new HypertraceAgent()
-hypertraceAgent.instrument()
-
 const express = require("express");
 var bodyParser = require('body-parser');
 var http = require('http');
