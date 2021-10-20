@@ -2,7 +2,6 @@ import {NodeTracerProvider} from '@opentelemetry/node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/tracing';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
 import {Config} from './config/config'
-import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
 import {hypertrace} from "./config/generated";
@@ -22,6 +21,7 @@ import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 import {logger} from "./Logging";
 import {version} from "./Version";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
+import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 
 const api = require("@opentelemetry/api");
 

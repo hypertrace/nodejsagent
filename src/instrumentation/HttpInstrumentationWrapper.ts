@@ -11,6 +11,9 @@ import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
+const shimmer = require('shimmer');
+
+import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -41,21 +44,29 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute(`http.request.header.${key}`, <string>value)
             }
         }
-        let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
-        if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-            let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
-            const listener = (chunk: any) => {
-                bodyCapture.appendData(chunk)
+        // client outbound
+        if(request instanceof ClientRequest) {
+            let headers = request.getHeaders()
+            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
+                shimmer.wrap(request, "write", ResponseCaptureWithConfig(span, Config.getInstance()))
             }
-            request.on("data", listener);
 
-            request.once("end", () => {
-                request.removeListener('data', listener)
-                let bodyString = bodyCapture.dataString()
-                span.setAttribute("http.request.body", bodyString)
-            });
+        } else { // server inbound
+            let headers = request.headers
+            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
+                let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
+                const listener = (chunk: any) => {
+                    bodyCapture.appendData(chunk)
+                }
+                request.on("data", listener);
+
+                request.once("end", () => {
+                    request.removeListener('data', listener)
+                    let bodyString = bodyCapture.dataString()
+                    span.setAttribute("http.request.body", bodyString)
+                });
+            }
         }
-
     }
     IncomingRequestHook = this.incomingRequestHook.bind(this)
 
@@ -76,7 +87,7 @@ export class HttpInstrumentationWrapper {
 
 
     customAttrs(span: Span, request: ClientRequest | IncomingMessage, response: IncomingMessage | ServerResponse): void {
-        if(this.responseHeaderCaptureEnabled) {
+        if(this.responseHeaderCaptureEnabled && response instanceof ServerResponse) {
             let headers = (<ServerResponse>response).getHeaders()
             for (const [key, value] of Object.entries(headers)) {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)

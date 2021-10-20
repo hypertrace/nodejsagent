@@ -34,7 +34,6 @@ describe('Agent tests', () => {
         let requestSpanAttributes = spans[0].attributes
         expect(requestSpanAttributes['http.method']).to.equal('GET')
         expect(requestSpanAttributes['net.host.name']).to.equal('localhost')
-        expect(requestSpanAttributes['http.route']).to.equal('/test')
         expect(requestSpanAttributes['http.target']).to.equal('/test')
         expect(requestSpanAttributes['net.transport']).to.equal('ip_tcp')
         expect(requestSpanAttributes['http.status_code']).to.equal(200)

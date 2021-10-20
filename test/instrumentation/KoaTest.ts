@@ -72,6 +72,10 @@ describe('Koa tests', () => {
         let serverSpan = spans[0]
         expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
         expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
+
+        let requestSpan = spans[0]
+        expect(requestSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
+        expect(requestSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
     })
 
     it('will collect only configured max body size', async () => {
@@ -92,6 +96,11 @@ describe('Koa tests', () => {
         let serverSpan = spans[0]
         expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"r")
         expect(serverSpan.attributes['http.response.body']).to.eql("{\"status\":")
+
+        let requestSpan = spans[1]
+        expect(requestSpan.attributes['http.request.body']).to.eql("{\"test\":\"r")
+        expect(requestSpan.attributes['http.response.body']).to.eql("{\"status\":")
+
         Config.getInstance().config.data_capture.body_max_size_bytes = original
     })
 });
