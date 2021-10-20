@@ -1,15 +1,6 @@
-import {logger} from "../../Logging";
-
-const express = require("express");
-import {context, Span, trace} from "@opentelemetry/api";
+import { Span} from "@opentelemetry/api";
 import {Config} from "../../config/config";
-import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
 import {BodyCapture} from "../BodyCapture";
-import {OutgoingMessage} from "http";
-import {AgentForTest} from "../../../test/instrumentation/AgentForTest";
-import {ROOT_CONTEXT} from "@opentelemetry/api/build/src/context/context";
-
-const shimmer = require('shimmer');
 
 export function ResponseCaptureWithConfig(span : Span, config : any) : Function {
     return function (original : Function) {

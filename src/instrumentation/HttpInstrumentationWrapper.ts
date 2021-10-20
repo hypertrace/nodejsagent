@@ -5,7 +5,7 @@ import {
     OutgoingHttpHeaders, RequestOptions,
     ServerResponse
 } from "http";
-import {ContextAPI, Span} from "@opentelemetry/api";
+import {Span} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
 import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
