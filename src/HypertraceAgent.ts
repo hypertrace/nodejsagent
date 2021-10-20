@@ -82,7 +82,7 @@ export class HypertraceAgent {
         this.exporter = this.setupExporter()
         this.setupPropagation()
         this._provider.register()
-        logger.info('Provider registered')
+        logger.debug('Provider registered')
     }
 
 
