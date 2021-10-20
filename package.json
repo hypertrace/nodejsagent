@@ -9,6 +9,7 @@
     "type": "git",
     "url": "git://github.com/hypertrace/nodejsagent"
   },
+  "release": { "branches": [ "release" ] },
   "files": [
     "lib/**/*"
   ],
