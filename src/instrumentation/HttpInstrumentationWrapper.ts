@@ -43,9 +43,9 @@ export class HttpInstrumentationWrapper {
         }
         let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
         if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-            let bodyCapture : BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
+            let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
             const listener = (chunk: any) => {
-               bodyCapture.appendData(chunk)
+                bodyCapture.appendData(chunk)
             }
             request.on("data", listener);
 
@@ -55,6 +55,7 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute("http.request.body", bodyString)
             });
         }
+
     }
     IncomingRequestHook = this.incomingRequestHook.bind(this)
 
