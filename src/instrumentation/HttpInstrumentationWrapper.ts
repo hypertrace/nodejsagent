@@ -13,10 +13,6 @@ import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
 const shimmer = require('shimmer');
 
-import {
-    context,
-    trace
-} from '@opentelemetry/api';
 import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']

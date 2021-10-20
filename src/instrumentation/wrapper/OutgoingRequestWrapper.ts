@@ -13,6 +13,7 @@ const shimmer = require('shimmer');
 
 export function ResponseCaptureWithConfig(span : Span, config : any) : Function {
     return function (original : Function) {
+        const maxCaptureSize = config.config.data_capture.body_max_size_bytes
         const reqSpan = span
         return function(){
             if(reqSpan) {
