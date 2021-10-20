@@ -44,7 +44,12 @@ export class HypertraceAgent {
         logger.info("Successfully initialized Hypertrace Agent")
     }
 
-    instrument(): () => void {
+    instrument() {
+        if(!Config.getInstance().config.enabled) {
+            logger.info('Hypertrace disabled - not instrumenting')
+            return false
+        }
+        logger.info('Hypertrace enabled - instrumenting')
         this.setup()
         let httpWrapper = new HttpInstrumentationWrapper(this.config.config)
 
@@ -77,20 +82,24 @@ export class HypertraceAgent {
         this.exporter = this.setupExporter()
         this.setupPropagation()
         this._provider.register()
-        logger.debug(`provider registered`)
+        logger.debug('Provider registered')
     }
 
 
     private setupTracingProvider(): NodeTracerProvider {
+        let resourceAttributes = {
+            'service.name': this.config.config.service_name,
+            'service.instance.id': process.pid,
+            'telemetry.sdk.version': version,
+            'telemetry.sdk.name': 'hypertrace',
+            'telemetry.sdk.language': 'nodejs'
+        }
+        let extraConfigAttributes = Config.getInstance().config.resource_attributes
+        if(extraConfigAttributes) {
+            Object.assign(resourceAttributes, extraConfigAttributes)
+        }
         return new NodeTracerProvider({
-            resource: new Resource({
-                'service.name': this.config.config.service_name,
-                'service.instance.id': process.pid,
-                'telemetry.sdk.version': version,
-                'telemetry.sdk.name': 'hypertrace',
-                'telemetry.sdk.language': 'nodejs'
-            })
-            // TODO - append custom attributes from config
+            resource: new Resource(resourceAttributes)
         })
     }
 

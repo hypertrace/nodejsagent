@@ -5,6 +5,7 @@ agentTestWrapper.instrument()
 import {expect} from "chai";
 import * as http from "http";
 import {httpRequest} from "./HttpRequest";
+import {Config} from "../../src/config/config";
 
 describe('Agent tests', () => {
     const express = require('express');
@@ -47,4 +48,21 @@ describe('Agent tests', () => {
         expect(serverSpanAttributes['http.status_code']).to.equal(200)
         expect(spans[1].name).to.equal('HTTP GET')
     });
+
+    it('will not instrument if disabled', () => {
+        Config.getInstance().config.enabled = false
+        expect(agentTestWrapper.instrument()).to.equal(false)
+        Config.getInstance().config.enabled = true
+    })
+
+    it('will append extra config resource attributes', () => {
+        let original = Config.getInstance().config.resource_attributes
+        Config.getInstance().config.resource_attributes = {"some_extra_attr": "123", "another_attr": "foo"}
+
+        AgentForTest.renew()
+        let provider = AgentForTest.getInstance()._provider
+        expect(provider.resource.attributes['some_extra_attr']).to.equal('123')
+        expect(provider.resource.attributes['another_attr']).to.equal('foo')
+        Config.getInstance().config.resource_attributes = original
+    })
 });
