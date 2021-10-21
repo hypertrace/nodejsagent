@@ -22,6 +22,7 @@ import {logger} from "./Logging";
 import {version} from "./Version";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
+import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
 
 const api = require("@opentelemetry/api");
 
@@ -69,6 +70,7 @@ export class HypertraceAgent {
                     requestCallback: koaRequestCallback,
                     responseCallback: koaResponseCallback
                 }),
+                new GrpcInstrumentation(),
                 new GraphQLInstrumentation(),
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),

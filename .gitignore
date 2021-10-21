@@ -17,3 +17,6 @@ src/**/*.js
 
 # ide
 /.idea
+
+# built artifact
+hypertrace-nodejsagent-*.tgz
