@@ -9,7 +9,15 @@
     "type": "git",
     "url": "git://github.com/hypertrace/nodejsagent"
   },
-  "release": { "branches": [ "release", {"name": "main", "prerelease": true}] },
+  "release": {
+    "branches": [
+      "release",
+      {
+        "name": "main",
+        "prerelease": true
+      }
+    ]
+  },
   "files": [
     "lib/**/*"
   ],
@@ -42,6 +50,7 @@
     "@nestjs/common": "^8.1.1",
     "@nestjs/core": "^8.1.1",
     "@nestjs/platform-express": "^8.1.1",
+    "@semantic-release/github": "^8.0.1",
     "@types/chai": "^4.2.21",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.10.2",
@@ -65,9 +74,9 @@
     "mysql2": "^2.3.0",
     "pg": "^8.7.1",
     "reflect-metadata": "^0.1.13",
-    "semantic-release": "^18.0.0",
     "rimraf": "^3.0.2",
     "rxjs": "^7.4.0",
+    "semantic-release": "^18.0.0",
     "supertest": "^6.1.6",
     "ts-node": "~9.0.0",
     "tslint-config-prettier": "^1.18.0",

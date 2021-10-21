@@ -1,0 +1,24 @@
+{
+  "branches": [
+    "release",
+    {
+      "name": "main",
+      "prerelease": "rc"
+    }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "hypertrace-nodejsagent-*.tgz",
+            "label": "Distribution"
+          }
+        ]
+      }
+    ]
+  ]
+}
