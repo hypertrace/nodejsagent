@@ -21,4 +21,4 @@ jobs:
       - name: Wait for Docker
         run: sleep 100
       - name: Run Tests With Coverage
-        run: npm run coverage-ci && codecov --token${{ env.CODECOV_TOKEN }}
+        run: npm run coverage && codecov --token${{ env.CODECOV_TOKEN }}
