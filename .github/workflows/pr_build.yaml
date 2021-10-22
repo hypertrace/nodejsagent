@@ -20,5 +20,5 @@ jobs:
         run: cd ./test/externalServices && docker-compose up -d
       - name: Wait for Docker
         run: sleep 100
-      - name: Run Tests
-        run: npm run test
+      - name: Run Tests With Coverage
+        run: npm run coverage-ci && codecov --token${{ env.CODECOV_TOKEN }}
