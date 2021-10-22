@@ -23,4 +23,8 @@ jobs:
       - name: Install codecov
         run: npm install codecov -g
       - name: Run Tests With Coverage
-        run: npm run coverage && codecov --token="${{ secrets.CODECOV_TOKEN }}"
+        run: npm run coverage
+
+      - name: Upload coverage # only upload results from 1 matrix version, not all
+        if: matrix.node_version == '16'
+        run: codecov --token="${{ secrets.CODECOV_TOKEN }}"
