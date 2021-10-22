@@ -23,4 +23,4 @@ jobs:
       - name: Install codecov
         run: npm install codecov -g
       - name: Run Tests With Coverage
-        run: npm run coverage && codecov --token${{ env.CODECOV_TOKEN }}
+        run: npm run coverage && codecov --token="${{ secrets.CODECOV_TOKEN }}"
