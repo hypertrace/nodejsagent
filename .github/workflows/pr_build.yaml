@@ -1,7 +1,9 @@
 name: Pr build
 on:
   pull_request:
+  push:
     branches: [main]
+
 
 jobs:
   test:
@@ -20,5 +22,11 @@ jobs:
         run: cd ./test/externalServices && docker-compose up -d
       - name: Wait for Docker
         run: sleep 100
-      - name: Run Tests
-        run: npm run test
+      - name: Install codecov
+        run: npm install codecov -g
+      - name: Run Tests With Coverage
+        run: npm run coverage
+
+      - name: Upload coverage # only upload results from 1 matrix version, not all
+        if: matrix.node_version == '16'
+        run: codecov --token="${{ secrets.CODECOV_TOKEN }}"

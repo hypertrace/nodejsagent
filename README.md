@@ -1,4 +1,5 @@
 # Node.js Agent
+[![codecov](https://codecov.io/gh/hypertrace/nodejsagent/branch/main/graph/badge.svg?token=Y4ZH7D6LE3)](https://codecov.io/gh/hypertrace/nodejsagent)
 
 `nodejsagent` provides a set of complementary instrumentation features for collecting relevant data to be processed by [Hypertrace](https://hypertrace.org).
 
