@@ -11,7 +11,6 @@ import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
-const shimmer = require('shimmer');
 
 import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
 
@@ -46,11 +45,8 @@ export class HttpInstrumentationWrapper {
         }
         // client outbound
         if(request instanceof ClientRequest) {
-            let headers = request.getHeaders()
-            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-                shimmer.wrap(request, "write", ResponseCaptureWithConfig(span, Config.getInstance()))
-            }
-
+            // @ts-ignore
+            request.hypertraceSpan = span
         } else { // server inbound
             let headers = request.headers
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
