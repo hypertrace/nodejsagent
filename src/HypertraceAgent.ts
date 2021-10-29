@@ -23,6 +23,7 @@ import {version} from "./Version";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
+import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 
 const api = require("@opentelemetry/api");
 
@@ -54,6 +55,7 @@ export class HypertraceAgent {
         this.setup()
         let httpWrapper = new HttpInstrumentationWrapper(this.config.config)
 
+        patchClientRequest()
         patchExpress()
         return registerInstrumentations({
             tracerProvider: this._provider,

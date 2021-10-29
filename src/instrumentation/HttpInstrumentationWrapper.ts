@@ -11,7 +11,6 @@ import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
-const shimmer = require('shimmer');
 
 import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
 
@@ -40,17 +39,14 @@ export class HttpInstrumentationWrapper {
     incomingRequestHook(span: Span, request: ClientRequest | IncomingMessage) {
         if(this.requestHeaderCaptureEnabled) {
             let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
-            for (const [key, value] of Object.entries(headers)) {
-                span.setAttribute(`http.request.header.${key}`, <string>value)
+            for (const key in headers) {
+                span.setAttribute(`http.request.header.${key}`, <string>headers[key])
             }
         }
         // client outbound
         if(request instanceof ClientRequest) {
-            let headers = request.getHeaders()
-            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-                shimmer.wrap(request, "write", ResponseCaptureWithConfig(span, Config.getInstance()))
-            }
-
+            // @ts-ignore
+            request.hypertraceSpan = span
         } else { // server inbound
             let headers = request.headers
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
@@ -77,8 +73,8 @@ export class HttpInstrumentationWrapper {
             if(!outgoingHeaders){
                 return attrs
             }
-            for (const [key, value] of Object.entries(outgoingHeaders)) {
-                attrs[`http.request.header.${key}`.toLowerCase()] = <string>value
+            for (const key in outgoingHeaders) {
+                attrs[`http.request.header.${key}`.toLowerCase()] = outgoingHeaders[key]
             }
         }
         return attrs
@@ -87,10 +83,10 @@ export class HttpInstrumentationWrapper {
 
 
     customAttrs(span: Span, request: ClientRequest | IncomingMessage, response: IncomingMessage | ServerResponse): void {
-        if(this.responseHeaderCaptureEnabled && response instanceof ServerResponse) {
+        if(response instanceof ServerResponse && this.responseHeaderCaptureEnabled) {
             let headers = (<ServerResponse>response).getHeaders()
-            for (const [key, value] of Object.entries(headers)) {
-                span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
+            for(const key in headers) {
+                span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>headers[key])
             }
         }
     }
