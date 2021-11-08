@@ -1,6 +1,8 @@
 import {BodyCapture} from "../BodyCapture";
 import {Config} from "../../config/config";
 import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
+import {Registry} from "../../filter/Registry";
+import {REQUEST_TYPE} from "../../filter/Filter";
 
 export function koaRequestCallback(context: any, span: any) {
     if (!span) { return }
@@ -13,14 +15,23 @@ export function koaRequestCallback(context: any, span: any) {
 
     const reqBodyCaptureEnabled = Config.getInstance().config.data_capture.http_body.request
     if(!reqBodyCaptureEnabled) { return }
+    let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes)
 
     if(HttpInstrumentationWrapper.isRecordableContentType(reqHeaders['content-type'])) {
         const bodyData = context.request.rawBody
         if(bodyData){
-            let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes)
             bodyCapture.appendData(bodyData)
             span.setAttribute("http.request.body", bodyCapture.dataString())
         }
+    }
+
+    const filterResult = Registry.getInstance().applyFilters(span,
+        context.originalUrl,
+        reqHeaders,
+        bodyCapture.dataString(),
+        REQUEST_TYPE.HTTP )
+    if(filterResult){
+        context.throw(403, 'Permission Denied');
     }
 }
 

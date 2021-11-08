@@ -21,6 +21,7 @@ import {VERSION} from '@opentelemetry/instrumentation-koa/build/src/version';
 import {getMiddlewareMetadata} from '@opentelemetry/instrumentation-koa/build/src/utils';
 import {getRPCMetadata, RPCType, setRPCMetadata} from '@opentelemetry/core';
 import {Exception, trace} from "@opentelemetry/api";
+import {ForbiddenError} from "apollo-server";
 
 export interface KoaInstrumentationConfig extends InstrumentationConfig {
     /** Ignore specific layers based on their type */
@@ -175,6 +176,10 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
                     return await middlewareLayer(context, next);
                 } catch (err) {
                     span.recordException(<Exception>err);
+                    if(err.name == 'ForbiddenError'){
+                        span.setAttribute('http.status_code', 403)
+                        span.setAttribute('http.status_text', 'FORBIDDEN')
+                    }
                     throw err;
                 } finally {
                     // start of diff:
