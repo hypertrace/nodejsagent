@@ -14,6 +14,6 @@ let l = require('npmlog')
 l.disableColor()
 Object.defineProperty(l, 'heading', { get: () => { return `${new Date().toISOString()} [hypertrace]` } })
 l.level = configuredLogLevel
-l.addLevel('debug', 10000)
+l.addLevel('debug', 1)
 
 export const logger = l

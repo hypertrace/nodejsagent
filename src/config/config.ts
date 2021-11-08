@@ -51,10 +51,14 @@ export class Config {
   private static loadFromFile(): object | null{
     let envPath = getEnvValue('CONFIG_FILE')
     if(envPath){
-      logger.debug(`Attempting to load log from configured path: ${envPath}`)
-      const fileContents = readFileSync(<PathOrFileDescriptor>envPath, 'utf-8')
-      logger.debug(`Successfully loaded config from file`)
-      return YAML.parse(fileContents)
+      try {
+        logger.debug(`Attempting to load log from configured path: ${envPath}`)
+        const fileContents = readFileSync(<PathOrFileDescriptor>envPath, 'utf-8')
+        logger.debug(`Successfully loaded config from file`)
+        return YAML.parse(fileContents)
+      } catch(e) {
+        logger.error(`Failed to load yaml file at path: ${envPath}`)
+      }
     }
     return null
   }
