@@ -14,6 +14,7 @@ import {Config} from "../config/config";
 const shimmer = require('shimmer');
 
 import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
+import {Registry} from "../filter/Registry";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -53,8 +54,8 @@ export class HttpInstrumentationWrapper {
 
         } else { // server inbound
             let headers = request.headers
+            let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-                let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
                 const listener = (chunk: any) => {
                     bodyCapture.appendData(chunk)
                 }
@@ -66,6 +67,8 @@ export class HttpInstrumentationWrapper {
                     span.setAttribute("http.request.body", bodyString)
                 });
             }
+            Registry.getInstance()
+            //Registry.getInstance().applyFilters(span, )
         }
     }
     IncomingRequestHook = this.incomingRequestHook.bind(this)
