@@ -664,6 +664,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                 false // we need to raise error but on throw if its the type we would raise
             );
         } catch(e){
+            // ts-ignore
             if(request instanceof IncomingMessage && e.name == 'PERMISSION DENIED'){
                 throw e
             }
