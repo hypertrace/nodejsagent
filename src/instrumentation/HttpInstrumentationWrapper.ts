@@ -2,18 +2,19 @@ import {
     ClientRequest,
     IncomingHttpHeaders,
     IncomingMessage,
-    OutgoingHttpHeaders, RequestOptions,
+    OutgoingHttpHeaders,
+    RequestOptions,
     ServerResponse
 } from "http";
 import {Span} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
-import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
-
-import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
 import {Registry} from "../filter/Registry";
+import {REQUEST_TYPE} from "../filter/Filter";
+import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
+import {ForbiddenError} from "apollo-server";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -50,6 +51,18 @@ export class HttpInstrumentationWrapper {
             request.hypertraceSpan = span
         } else { // server inbound
             let headers = request.headers
+            let filterResult = Registry.getInstance().applyFilters(span,
+                request.url,
+                headers,
+                undefined,
+                REQUEST_TYPE.HTTP
+            )
+            if(filterResult){
+                let error = new Error()
+                error.name = 'Permission Denied'
+                // @ts-ignore
+                throw error
+            }
             let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
                 const listener = (chunk: any) => {
@@ -60,11 +73,26 @@ export class HttpInstrumentationWrapper {
                 request.once("end", () => {
                     request.removeListener('data', listener)
                     let bodyString = bodyCapture.dataString()
+                    let filterResult = Registry.getInstance().applyFilters(span,
+                        request.url,
+                        headers,
+                        bodyString,
+                        REQUEST_TYPE.HTTP
+                    )
+                    if(filterResult){
+                       // @ts-ignore
+                        request.res.statusCode = 403
+                        // @ts-ignore
+                       request.res.statusMessage = 'Permission Denied'
+                        // @ts-ignore
+                       request.res.end()
+                        // @ts-ignore
+                        request.res.socket.destroy()
+                        throw new Error("asdf")
+                    }
                     span.setAttribute("http.request.body", bodyString)
                 });
             }
-            Registry.getInstance()
-            //Registry.getInstance().applyFilters(span, )
         }
     }
     IncomingRequestHook = this.incomingRequestHook.bind(this)

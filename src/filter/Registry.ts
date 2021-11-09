@@ -22,7 +22,7 @@ export class Registry {
         this.filters.push(filter_instance)
     }
 
-    public applyFilters(span: Span, url: string | undefined, headers: any, body: string, requestType: REQUEST_TYPE) : boolean {
+    public applyFilters(span: Span, url: string | undefined, headers: any, body: string | undefined, requestType: REQUEST_TYPE) : boolean {
         if(url || headers) {
             for(let filter of this.filters) {
                 if(filter.evaluateUrlAndHeaders(span, url, headers, requestType)) {
