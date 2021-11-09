@@ -8,6 +8,8 @@ import {Body, INestApplication, Module, Post} from "@nestjs/common";
 import { Controller, Get } from '@nestjs/common';
 import {httpRequest} from "./HttpRequest";
 import {expect} from "chai";
+import {Registry} from "../../src/filter/Registry";
+import {SampleFilter} from "./SampleFilter";
 
 export class CreateString {
     data: string;
@@ -39,7 +41,7 @@ class AppController {
 export class AppModule {}
 
 // https://docs.nestjs.com/first-steps#prerequisites
-if(!['v8', 'v10'].some((nodeVersion) => {process.version.startsWith(nodeVersion)})) {
+//if(!['v8', 'v10'].some((nodeVersion) => {process.version.startsWith(nodeVersion)})) {
     async function bootstrap() : Promise<INestApplication> {
         const app = await NestFactory.create(AppModule);
         await app.listen(3000);
@@ -102,5 +104,61 @@ if(!['v8', 'v10'].some((nodeVersion) => {process.version.startsWith(nodeVersion)
             expect(requestSpan.attributes['http.request.body']).to.eql("{\"data\":\"some_data\"}")
             expect(requestSpan.attributes['http.response.body']).to.eql("{\"msg\":\"success\",\"data\":\"some_data\"}")
         });
+
+        describe('filter api', () => {
+            before(() => {
+                Registry.getInstance().register(new SampleFilter())
+            })
+
+            after(() => {
+                // @ts-ignore
+                Registry.instance = undefined
+            })
+
+            it('will return a 403 if a header filter returns true', async() => {
+                await httpRequest.post({
+                        host: 'localhost',
+                        port: 8000,
+                        path: '/test-post',
+                        headers: {
+                            'Content-Type': "application/json",
+                            'x-filter-test': "123"
+                        }
+                    },
+                    JSON.stringify({"test": "req data"}))
+
+                let spans = agentTestWrapper.getSpans()
+                expect(spans.length).to.equal(2)
+                let serverSpan = spans[0]
+                expect(serverSpan.attributes['http.status_code']).to.equal(403)
+                expect(serverSpan.attributes['http.status_text']).to.equal('PERMISSION DENIED')
+
+                let requestSpan = spans[1]
+                expect(requestSpan.attributes['http.status_code']).to.equal(403)
+                expect(requestSpan.attributes['http.status_text']).to.equal('PERMISSION DENIED')
+            })
+
+            it('will return a 403 if a body filter returns true', async() => {
+                await httpRequest.post({
+                        host: 'localhost',
+                        port: 8000,
+                        path: '/test-post',
+                        headers: {
+                            'Content-Type': "application/json",
+                        }
+                    },
+                    JSON.stringify({"test": "block-this-body"}))
+
+                let spans = agentTestWrapper.getSpans()
+                expect(spans.length).to.equal(2)
+                let serverSpan = spans[0]
+                expect(serverSpan.attributes['http.status_code']).to.equal(403)
+                expect(serverSpan.attributes['http.status_text']).to.equal('FORBIDDEN')
+
+                let requestSpan = spans[1]
+                expect(requestSpan.attributes['http.status_code']).to.equal(403)
+                expect(requestSpan.attributes['http.status_text']).to.equal('FORBIDDEN')
+            })
+        })
     });
-}
+//}

@@ -14,6 +14,4 @@ export class SampleFilter extends Filter {
     evaluateBodyAndHeaders(span: Span, headers: any, body: string, requestType: REQUEST_TYPE): boolean {
         return body.indexOf('block-this-body') > -1
     }
-
-
 }

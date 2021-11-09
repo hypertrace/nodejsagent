@@ -425,9 +425,9 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                         // we will raise forbidden error if filters evaluated to true
                         // we need to close + write 403 resp before app code is invoked
                         response.statusCode = 403
-                        response.statusMessage = 'Permission Denied'
+                        response.statusMessage = 'PERMISSION DENIED'
                         span.setAttribute('http.status_code', 403)
-                        span.setAttribute('http.status_text', 'Permission Denied')
+                        span.setAttribute('http.status_text', 'PERMISSION DENIED')
                         response.end()
                         utils.setSpanWithError(span, e);
                         instrumentation._closeHttpSpan(span);
@@ -664,7 +664,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                 false // we need to raise error but on throw if its the type we would raise
             );
         } catch(e){
-            if(request instanceof IncomingMessage && e.name == 'Permission Denied'){
+            if(request instanceof IncomingMessage && e.name == 'PERMISSION DENIED'){
                 throw e
             }
         }

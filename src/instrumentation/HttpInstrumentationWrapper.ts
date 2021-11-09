@@ -59,7 +59,7 @@ export class HttpInstrumentationWrapper {
             )
             if(filterResult){
                 let error = new Error()
-                error.name = 'Permission Denied'
+                error.name = 'PERMISSION DENIED'
                 // @ts-ignore
                 throw error
             }
@@ -73,22 +73,25 @@ export class HttpInstrumentationWrapper {
                 request.once("end", () => {
                     request.removeListener('data', listener)
                     let bodyString = bodyCapture.dataString()
-                    let filterResult = Registry.getInstance().applyFilters(span,
-                        request.url,
-                        headers,
-                        bodyString,
-                        REQUEST_TYPE.HTTP
-                    )
-                    if(filterResult){
-                       // @ts-ignore
-                        request.res.statusCode = 403
-                        // @ts-ignore
-                       request.res.statusMessage = 'Permission Denied'
-                        // @ts-ignore
-                       request.res.end()
-                        // @ts-ignore
-                        request.res.socket.destroy()
-                        throw new Error("asdf")
+                    // @ts-ignore
+                    if(request.res){ // this means we are in a express based app
+                        let filterResult = Registry.getInstance().applyFilters(span,
+                            request.url,
+                            headers,
+                            bodyString,
+                            REQUEST_TYPE.HTTP
+                        )
+                        if(filterResult){
+                            // @ts-ignore
+                            request.res.statusCode = 403
+                            // @ts-ignore
+                            request.res.statusMessage = 'FORBIDDEN'
+                            // @ts-ignore
+                            request.res.req.next(new Error('FORBIDDEN'))
+
+                            // @ts-ignore
+                            request.res.socket.destroy()
+                        }
                     }
                     span.setAttribute("http.request.body", bodyString)
                 });
