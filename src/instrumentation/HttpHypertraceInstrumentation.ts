@@ -429,7 +429,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                         span.setAttribute('http.status_code', 403)
                         span.setAttribute('http.status_text', 'PERMISSION DENIED')
                         response.end()
-                        // ts-ignore
+                        // @ts-ignore
                         utils.setSpanWithError(span, e);
                         instrumentation._closeHttpSpan(span);
                         return false
@@ -665,7 +665,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                 false // we need to raise error but on throw if its the type we would raise
             );
         } catch(e){
-            // ts-ignore
+            // @ts-ignore
             if(request instanceof IncomingMessage && e.name == 'PERMISSION DENIED'){
                 throw e
             }
