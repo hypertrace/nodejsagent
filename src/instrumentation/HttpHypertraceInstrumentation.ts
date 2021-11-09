@@ -429,6 +429,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                         span.setAttribute('http.status_code', 403)
                         span.setAttribute('http.status_text', 'PERMISSION DENIED')
                         response.end()
+                        // ts-ignore
                         utils.setSpanWithError(span, e);
                         instrumentation._closeHttpSpan(span);
                         return false
