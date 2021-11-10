@@ -21,6 +21,7 @@ import {VERSION} from '@opentelemetry/instrumentation-koa/build/src/version';
 import {getMiddlewareMetadata} from '@opentelemetry/instrumentation-koa/build/src/utils';
 import {getRPCMetadata, RPCType, setRPCMetadata} from '@opentelemetry/core';
 import {Exception, trace} from "@opentelemetry/api";
+import {MESSAGE, STATUS_CODE} from "../filter/Filter";
 
 export interface KoaInstrumentationConfig extends InstrumentationConfig {
     /** Ignore specific layers based on their type */
@@ -177,8 +178,8 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
                     span.recordException(<Exception>err);
                     // @ts-ignore
                     if(err.name == 'ForbiddenError'){
-                        span.setAttribute('http.status_code', 403)
-                        span.setAttribute('http.status_text', 'FORBIDDEN')
+                        span.setAttribute('http.status_code', STATUS_CODE)
+                        span.setAttribute('http.status_text', MESSAGE)
                     }
                     throw err;
                 } finally {

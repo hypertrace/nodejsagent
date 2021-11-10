@@ -132,11 +132,11 @@ describe('Koa tests', () => {
             expect(spans.length).to.equal(2)
             let serverSpan = spans[0]
             expect(serverSpan.attributes['http.status_code']).to.equal(403)
-            expect(serverSpan.attributes['http.status_text']).to.equal('PERMISSION DENIED')
+            expect(serverSpan.attributes['http.status_text']).to.equal('FORBIDDEN')
 
             let requestSpan = spans[1]
             expect(requestSpan.attributes['http.status_code']).to.equal(403)
-            expect(requestSpan.attributes['http.status_text']).to.equal('PERMISSION DENIED')
+            expect(requestSpan.attributes['http.status_text']).to.equal('FORBIDDEN')
         })
 
         it('will return a 403 if a body filter returns true', async() => {

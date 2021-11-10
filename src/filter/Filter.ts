@@ -1,5 +1,17 @@
 import {Span} from "@opentelemetry/api";
 
+export const MESSAGE = 'FORBIDDEN';
+export const STATUS_CODE = 403;
+
+export function filterError() : Error{
+    let e = new Error(MESSAGE)
+    // @ts-ignore
+    e.status = STATUS_CODE
+    // @ts-ignore
+    e.statusCode = STATUS_CODE
+    return e
+}
+
 export enum REQUEST_TYPE {
     HTTP = 'http',
     RPC = 'rpc'

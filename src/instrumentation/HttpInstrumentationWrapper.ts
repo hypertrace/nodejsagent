@@ -12,9 +12,8 @@ import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
 import {Registry} from "../filter/Registry";
-import {REQUEST_TYPE} from "../filter/Filter";
+import {filterError, MESSAGE, REQUEST_TYPE, STATUS_CODE} from "../filter/Filter";
 import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
-import {ForbiddenError} from "apollo-server";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -58,10 +57,7 @@ export class HttpInstrumentationWrapper {
                 REQUEST_TYPE.HTTP
             )
             if(filterResult){
-                let error = new Error()
-                error.name = 'PERMISSION DENIED'
-                // @ts-ignore
-                throw error
+               throw filterError()
             }
             let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
@@ -83,12 +79,14 @@ export class HttpInstrumentationWrapper {
                         )
                         if(filterResult){
                             // @ts-ignore
-                            request.res.statusCode = 403
+                            request.res.statusCode = STATUS_CODE
                             // @ts-ignore
-                            request.res.statusMessage = 'FORBIDDEN'
+                            request.res.statusMessage = MESSAGE
+                            let e = new Error('Permission Denied')
                             // @ts-ignore
-                            request.res.req.next(new Error('FORBIDDEN'))
-
+                            e.statusCode = 403
+                            // @ts-ignore
+                            request.res.req.next(e)
                             // @ts-ignore
                             request.res.socket.destroy()
                         }

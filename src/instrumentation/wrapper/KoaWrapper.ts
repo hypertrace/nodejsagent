@@ -2,7 +2,7 @@ import {BodyCapture} from "../BodyCapture";
 import {Config} from "../../config/config";
 import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
 import {Registry} from "../../filter/Registry";
-import {REQUEST_TYPE} from "../../filter/Filter";
+import {MESSAGE, REQUEST_TYPE, STATUS_CODE} from "../../filter/Filter";
 
 export function koaRequestCallback(context: any, span: any) {
     if (!span) { return }
@@ -31,7 +31,7 @@ export function koaRequestCallback(context: any, span: any) {
         bodyCapture.dataString(),
         REQUEST_TYPE.HTTP )
     if(filterResult){
-        context.throw(403, 'Permission Denied');
+        context.throw(STATUS_CODE, MESSAGE);
     }
 }
 

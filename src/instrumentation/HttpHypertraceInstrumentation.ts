@@ -51,6 +51,7 @@ import {
 import { RPCMetadata, RPCType, setRPCMetadata } from '@opentelemetry/core';
 import {IncomingMessage} from "http";
 import {filter} from "rxjs/operators";
+import {MESSAGE, STATUS_CODE} from "../filter/Filter";
 
 /**
  * Http instrumentation instrumentation for Opentelemetry
@@ -424,10 +425,10 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                     } catch (e) {
                         // we will raise forbidden error if filters evaluated to true
                         // we need to close + write 403 resp before app code is invoked
-                        response.statusCode = 403
-                        response.statusMessage = 'PERMISSION DENIED'
-                        span.setAttribute('http.status_code', 403)
-                        span.setAttribute('http.status_text', 'PERMISSION DENIED')
+                        response.statusCode = STATUS_CODE
+                        response.statusMessage = MESSAGE
+                        span.setAttribute('http.status_code', STATUS_CODE)
+                        span.setAttribute('http.status_text', MESSAGE)
                         response.end()
                         // @ts-ignore
                         utils.setSpanWithError(span, e);
@@ -666,7 +667,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
             );
         } catch(e){
             // @ts-ignore
-            if(request instanceof IncomingMessage && e.name == 'PERMISSION DENIED'){
+            if(request instanceof IncomingMessage && e.message == MESSAGE){
                 throw e
             }
         }
