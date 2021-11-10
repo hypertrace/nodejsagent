@@ -176,8 +176,9 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
                     return await middlewareLayer(context, next);
                 } catch (err) {
                     span.recordException(<Exception>err);
+                    let a = MESSAGE;
                     // @ts-ignore
-                    if(err.name == 'ForbiddenError'){
+                    if(err.message == MESSAGE){
                         span.setAttribute('http.status_code', STATUS_CODE)
                         span.setAttribute('http.status_text', MESSAGE)
                     }

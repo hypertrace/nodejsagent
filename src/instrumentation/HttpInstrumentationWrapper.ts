@@ -82,13 +82,11 @@ export class HttpInstrumentationWrapper {
                             request.res.statusCode = STATUS_CODE
                             // @ts-ignore
                             request.res.statusMessage = MESSAGE
-                            let e = new Error('Permission Denied')
                             // @ts-ignore
-                            e.statusCode = 403
+                            request.res.req.next(filterError())
+
                             // @ts-ignore
-                            request.res.req.next(e)
-                            // @ts-ignore
-                            request.res.socket.destroy()
+                            //request.res.socket.destroy()
                         }
                     }
                     span.setAttribute("http.request.body", bodyString)

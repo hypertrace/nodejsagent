@@ -5,6 +5,7 @@ export const STATUS_CODE = 403;
 
 export function filterError() : Error{
     let e = new Error(MESSAGE)
+    e.message = MESSAGE
     // @ts-ignore
     e.status = STATUS_CODE
     // @ts-ignore

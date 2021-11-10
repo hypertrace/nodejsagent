@@ -2,16 +2,19 @@ import {context, trace} from "@opentelemetry/api";
 import {Config} from "../../config/config";
 import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
 import {BodyCapture} from "../BodyCapture";
+import {MESSAGE} from "../../filter/Filter";
 
 const shimmer = require('shimmer');
-function available(){
+export function available(mod : string){
     try {
-        require.resolve('express')
+        require.resolve(mod)
         return true
     } catch {
         return false
     }
 }
+
+
 function ResponseCaptureWithConfig(config : any) : Function {
     return function (original : Function) {
         const responseBodyEnabled = config.config.data_capture.http_body.response
@@ -36,7 +39,7 @@ function ResponseCaptureWithConfig(config : any) : Function {
 }
 
 export function patchExpress(){
-    if(!available()){
+    if(!available('express')){
         return
     }
     const express = require('express')
