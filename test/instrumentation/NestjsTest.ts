@@ -41,7 +41,7 @@ class AppController {
 export class AppModule {}
 
 // https://docs.nestjs.com/first-steps#prerequisites
-//if(!['v8', 'v10'].some((nodeVersion) => {process.version.startsWith(nodeVersion)})) {
+if(!['v8', 'v10'].some((nodeVersion) => {process.version.startsWith(nodeVersion)})) {
     async function bootstrap() : Promise<INestApplication> {
         const app = await NestFactory.create(AppModule);
         await app.listen(3000);
@@ -161,4 +161,4 @@ export class AppModule {}
             })
         })
     });
-//}
+}
