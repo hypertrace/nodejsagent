@@ -665,7 +665,8 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                 () => {},
                 false // we need to raise error but on throw if its the type we would raise
             );
-        } catch(e){
+        } catch(e){ // original implementation sets safeExecuteInTheMiddle 3rd are to true, we need false
+            // so that we can catch security exception at http level
             // @ts-ignore
             if(request instanceof IncomingMessage && e.message == MESSAGE){
                 throw e
