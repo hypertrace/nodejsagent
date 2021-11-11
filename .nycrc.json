@@ -1,6 +1,6 @@
 {
   "all": true,
-  "check-coverage": false,
+  "check-coverage": true,
   "include": "src/**/*.ts",
-  "exclude": "src/config/generated.*"
+  "exclude": "src/config/generated.*, src/instrumentation/HttpInstrumentationWrapper.ts"
 }
