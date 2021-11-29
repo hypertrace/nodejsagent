@@ -2,17 +2,18 @@ import {
     ClientRequest,
     IncomingHttpHeaders,
     IncomingMessage,
-    OutgoingHttpHeaders, RequestOptions,
+    OutgoingHttpHeaders,
+    RequestOptions,
     ServerResponse
 } from "http";
 import {Span} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
-import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
-
-import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
+import {Registry} from "../filter/Registry";
+import {filterError, MESSAGE, REQUEST_TYPE, STATUS_CODE} from "../filter/Filter";
+import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -49,8 +50,17 @@ export class HttpInstrumentationWrapper {
             request.hypertraceSpan = span
         } else { // server inbound
             let headers = request.headers
+            let filterResult = Registry.getInstance().applyFilters(span,
+                request.url,
+                headers,
+                undefined,
+                REQUEST_TYPE.HTTP
+            )
+            if(filterResult){
+               throw filterError()
+            }
+            let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-                let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
                 const listener = (chunk: any) => {
                     bodyCapture.appendData(chunk)
                 }
@@ -59,6 +69,26 @@ export class HttpInstrumentationWrapper {
                 request.once("end", () => {
                     request.removeListener('data', listener)
                     let bodyString = bodyCapture.dataString()
+                    // @ts-ignore
+                    if(request.res){ // this means we are in a express based app
+                        let filterResult = Registry.getInstance().applyFilters(span,
+                            request.url,
+                            headers,
+                            bodyString,
+                            REQUEST_TYPE.HTTP
+                        )
+                        if(filterResult){
+                            // @ts-ignore
+                            request.res.statusCode = STATUS_CODE
+                            // @ts-ignore
+                            request.res.statusMessage = MESSAGE
+                            // @ts-ignore
+                            request.res.req.next(filterError())
+
+                            // @ts-ignore
+                            //request.res.socket.destroy()
+                        }
+                    }
                     span.setAttribute("http.request.body", bodyString)
                 });
             }

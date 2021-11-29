@@ -24,6 +24,8 @@ import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
+import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
+import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
 
 const api = require("@opentelemetry/api");
 
@@ -57,10 +59,11 @@ export class HypertraceAgent {
 
         patchClientRequest()
         patchExpress()
+        patchSails()
         return registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
-                new HttpInstrumentation({
+                new HttpHypertraceInstrumentation({
                     requestHook: httpWrapper.IncomingRequestHook,
                     startOutgoingSpanHook: httpWrapper.OutgoingRequestHook,
                     applyCustomAttributesOnSpan: httpWrapper.CustomAttrs,
