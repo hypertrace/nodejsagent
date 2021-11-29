@@ -1,10 +1,10 @@
-import {Filter, REQUEST_TYPE} from "./Filter";
+import {IFilter, REQUEST_TYPE} from "./Filter";
 import {Span} from "@opentelemetry/api";
 
 export class Registry {
 
     private static instance: Registry | undefined;
-    private readonly filters : Filter[]
+    private readonly filters : IFilter[]
 
     private constructor() {
         this.filters = []
@@ -18,7 +18,7 @@ export class Registry {
         return Registry.instance;
     }
 
-    public register(filter_instance : Filter) {
+    public register(filter_instance : IFilter) {
         this.filters.push(filter_instance)
     }
 
