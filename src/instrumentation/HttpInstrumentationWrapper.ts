@@ -6,7 +6,7 @@ import {
     RequestOptions,
     ServerResponse
 } from "http";
-import {Span} from "@opentelemetry/api";
+import {context, Span, SpanAttributes} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
@@ -14,6 +14,8 @@ import {Config} from "../config/config";
 import {Registry} from "../filter/Registry";
 import {filterError, MESSAGE, REQUEST_TYPE, STATUS_CODE} from "../filter/Filter";
 import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
+import {getRPCMetadata, RPCType} from "@opentelemetry/core";
+import {SemanticAttributes} from "@opentelemetry/semantic-conventions";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -49,6 +51,8 @@ export class HttpInstrumentationWrapper {
             // @ts-ignore
             request.hypertraceSpan = span
         } else { // server inbound
+            this.setIncomingRequestAttributes(span, request);
+
             let headers = request.headers
             let filterResult = Registry.getInstance().applyFilters(span,
                 request.url,
@@ -164,4 +168,24 @@ export class HttpInstrumentationWrapper {
         }
         return false
     }
+
+    // We need to collect request data before sending span to Filter API
+    private setIncomingRequestAttributes = (span: Span, request: IncomingMessage) => {
+        const { socket } = request;
+        const { localAddress, localPort, remoteAddress, remotePort } = socket;
+        const rpcMetadata = getRPCMetadata(context.active());
+
+        const attributes: SpanAttributes = {
+            [SemanticAttributes.NET_HOST_IP]: localAddress,
+            [SemanticAttributes.NET_HOST_PORT]: localPort,
+            [SemanticAttributes.NET_PEER_IP]: remoteAddress,
+            [SemanticAttributes.NET_PEER_PORT]: remotePort,
+        };
+
+        if (rpcMetadata?.type === RPCType.HTTP && rpcMetadata.route !== undefined) {
+            attributes[SemanticAttributes.HTTP_ROUTE] = rpcMetadata.route;
+        }
+
+        span.setAttributes(attributes);
+    };
 }
