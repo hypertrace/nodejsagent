@@ -1,7 +1,7 @@
-import {Filter, REQUEST_TYPE} from "../../src/filter/Filter";
+import {IFilter, REQUEST_TYPE} from "../../src/filter/Filter";
 import {Span} from "@opentelemetry/api";
 
-export class SampleFilter extends Filter {
+export class SampleFilter implements IFilter {
     evaluateUrlAndHeaders(span: Span, url: string | undefined, headers: any, requestType: REQUEST_TYPE): boolean {
         for(const [k, _] of Object.entries(headers)){
             if(k == 'x-filter-test'){
