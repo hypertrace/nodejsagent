@@ -16,6 +16,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node_version }}
+      - run: npm install
       - name: Standup Test Docker Services
         run: cd ./test/externalServices && docker-compose up -d
       - name: Wait for Docker
