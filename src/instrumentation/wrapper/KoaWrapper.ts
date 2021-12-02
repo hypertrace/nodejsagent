@@ -29,7 +29,7 @@ export function koaRequestCallback(context: any, span: any) {
     const filterResult = Registry.getInstance().applyFilters(span,
         context.originalUrl,
         reqHeaders,
-        bodyCapture.dataString(),
+        bodyCapture.processableString(),
         REQUEST_TYPE.HTTP )
     if(filterResult){
         context.throw(STATUS_CODE, MESSAGE);
