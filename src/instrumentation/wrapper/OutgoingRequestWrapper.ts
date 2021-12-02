@@ -10,7 +10,8 @@ export function ResponseCaptureWithConfig(config : any) : Function {
         return function(){
             // @ts-ignore
             if(this.hypertraceSpan) {
-                let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes)
+                let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                    Config.getInstance().config.data_capture.body_max_processing_size_bytes)
                 bodyCapture.appendData(arguments[0])
                 // @ts-ignore
                 this.hypertraceSpan.setAttribute('http.request.body', bodyCapture.dataString())
