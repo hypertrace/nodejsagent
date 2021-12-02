@@ -9,6 +9,9 @@ import {httpRequest} from "./HttpRequest";
 import {Config} from "../../src/config/config";
 import {Registry} from "../../src/filter/Registry";
 import {SampleFilter} from "./SampleFilter";
+import {IFilter} from "../../src/filter/Filter";
+import {Span} from "@opentelemetry/api";
+import {REQUEST_TYPE} from "../../lib/filter/Filter";
 
 
 describe('Agent tests', () => {
@@ -196,6 +199,42 @@ describe('Agent tests', () => {
             let requestSpan = spans[1]
             expect(requestSpan.attributes['http.status_code']).to.equal(403)
             expect(requestSpan.attributes['http.status_text']).to.equal('FORBIDDEN')
+        })
+
+        it('will call the filter with ip attributes', async () => {
+            class TestFilter implements IFilter {
+                evaluateBodyAndHeaders(span: Span, headers: any, body: string, requestType: REQUEST_TYPE): boolean {
+                    // @ts-ignore
+                    const attrs = span.attributes
+                    expect(attrs['net.peer.ip']).to.exist
+                    return false;
+                }
+
+                evaluateUrlAndHeaders(span: Span, url: string | undefined, headers: any, requestType: REQUEST_TYPE): boolean {
+                    // @ts-ignore
+                    const attrs = span.attributes
+                    expect(attrs['net.peer.ip']).to.exist
+                    return false;
+                }
+            }
+            Registry.getInstance().register(new TestFilter())
+            await httpRequest.post({
+                    host: 'localhost',
+                    port: 8000,
+                    path: '/test_post',
+                    headers: {
+                        'Content-Type': "application/json",
+                    }
+                },
+                JSON.stringify({"test": "body-content"}))
+
+            let spans = agentTestWrapper.getSpans()
+            expect(spans.length).to.equal(2)
+            let serverSpan = spans[0]
+            expect(serverSpan.attributes['http.status_code']).to.equal(200)
+
+            let requestSpan = spans[1]
+            expect(requestSpan.attributes['http.status_code']).to.equal(200)
         })
     })
 });

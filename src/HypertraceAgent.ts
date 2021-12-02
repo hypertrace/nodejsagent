@@ -5,7 +5,7 @@ import {Config} from './config/config'
 import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
 import {hypertrace} from "./config/generated";
-import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
+import {CompositePropagator, W3CTraceContextPropagator} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
 import {TextMapPropagator} from "@opentelemetry/api";
 import {HttpInstrumentationWrapper} from "./instrumentation/HttpInstrumentationWrapper";
@@ -115,7 +115,7 @@ export class HypertraceAgent {
         for (let propagationType of this.config.config.propagation_formats) {
             if (propagationType == 'TRACECONTEXT') {
                 logger.debug(`Adding tracecontext propagator`)
-                formats.push(new HttpTraceContextPropagator())
+                formats.push(new W3CTraceContextPropagator())
             } else if (propagationType == "B3") {
                 logger.debug(`Adding b3 propagator`)
                 formats.push(new B3Propagator())
