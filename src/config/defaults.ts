@@ -30,8 +30,7 @@ const DEFAULT_AGENT_CONFIG = {
             'request': true,
             'response': true,
         },
-        'body_max_size_bytes': 131072,
-        'body_max_processing_size_bytes': 1048576
+        'body_max_size_bytes': 131072
     },
     'resource_attributes': {}
 }

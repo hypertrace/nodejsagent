@@ -21,7 +21,6 @@ data_capture:
     request: false
     response: false
   body_max_size_bytes: 123457
-  body_max_processing_size_bytes: 567890
 propagation_formats: ["B3"]
 enabled: false
 resource_attributes: { "tester01": "tester01" }
