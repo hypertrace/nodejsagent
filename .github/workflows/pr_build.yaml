@@ -23,7 +23,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: proto
-          path: ./src/config/generated.js
+          path: ./src/config/generated.*
 
   test:
     needs: generate_proto
@@ -44,7 +44,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: proto
-          path: ./src/config/generated.js
+          path: ./src/config/
+
+      - run: ls ./src/config
 
       - name: Standup Test Docker Services
         run: cd ./test/externalServices && docker-compose up -d
