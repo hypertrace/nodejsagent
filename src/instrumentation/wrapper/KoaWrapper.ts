@@ -15,7 +15,8 @@ export function koaRequestCallback(context: any, span: any) {
 
     const reqBodyCaptureEnabled = Config.getInstance().config.data_capture.http_body.request
     if(!reqBodyCaptureEnabled) { return }
-    let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes)
+    let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+        Config.getInstance().config.data_capture.body_max_processing_size_bytes)
 
     if(HttpInstrumentationWrapper.isRecordableContentType(reqHeaders['content-type'])) {
         const bodyData = context.request.rawBody
@@ -52,7 +53,8 @@ export function koaResponseCallback(context: any, span: any) {
     if(HttpInstrumentationWrapper.isRecordableContentType(resHeaders['content-type'])) {
         const bodyData = context.response._body
         if(bodyData){
-            let bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes);
+            let bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                Config.getInstance().config.data_capture.body_max_processing_size_bytes);
             bodyCapture.appendData(context.response._body)
             span.setAttribute('http.response.body', bodyCapture.dataString())
         }

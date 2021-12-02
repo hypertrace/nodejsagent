@@ -63,7 +63,8 @@ export class HttpInstrumentationWrapper {
             if(filterResult){
                throw filterError()
             }
-            let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
+            let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!,
+                <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!)
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
                 const listener = (chunk: any) => {
                     bodyCapture.appendData(chunk)
@@ -78,7 +79,7 @@ export class HttpInstrumentationWrapper {
                         let filterResult = Registry.getInstance().applyFilters(span,
                             request.url,
                             headers,
-                            bodyString,
+                            bodyCapture.processableString(),
                             REQUEST_TYPE.HTTP
                         )
                         if(filterResult){
@@ -131,7 +132,8 @@ export class HttpInstrumentationWrapper {
             for (const [key, value] of Object.entries(response.headers)) {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
-            let bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes);
+            let bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!);
             const listener = (chunk : any) => {
                 bodyCapture.appendData(chunk);
             };

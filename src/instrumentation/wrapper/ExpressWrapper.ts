@@ -26,7 +26,8 @@ function ResponseCaptureWithConfig(config : any) : Function {
                     // @ts-ignore
                     let headerContentType =  this.get('Content-Type')
                     if(HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
-                        let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes)
+                        let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                            Config.getInstance().config.data_capture.body_max_processing_size_bytes)
                         bodyCapture.appendData(arguments[0])
                         span.setAttribute('http.response.body', bodyCapture.dataString())
                     }
