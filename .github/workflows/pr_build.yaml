@@ -46,7 +46,7 @@ jobs:
           name: proto
           path: ./src/config/
 
-      - run: ls ./src/config
+      - run: tsc
 
       - name: Standup Test Docker Services
         run: cd ./test/externalServices && docker-compose up -d
