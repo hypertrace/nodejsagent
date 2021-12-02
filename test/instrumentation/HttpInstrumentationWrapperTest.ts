@@ -9,7 +9,7 @@ import {httpRequest} from "./HttpRequest";
 import {Config} from "../../src/config/config";
 import {Registry} from "../../src/filter/Registry";
 import {SampleFilter} from "./SampleFilter";
-import {IFilter} from "../../src/filter/Filter";
+import {Filter} from "../../src/filter/Filter";
 import {Span} from "@opentelemetry/api";
 import {REQUEST_TYPE} from "../../lib/filter/Filter";
 
@@ -202,7 +202,7 @@ describe('Agent tests', () => {
         })
 
         it('will call the filter with ip attributes', async () => {
-            class TestFilter implements IFilter {
+            class TestFilter extends Filter {
                 evaluateBodyAndHeaders(span: Span, headers: any, body: string, requestType: REQUEST_TYPE): boolean {
                     // @ts-ignore
                     const attrs = span.attributes

@@ -93,11 +93,6 @@ export function loadFromEnv(): object{
         dataCapture['body_max_size_bytes'] = parseInt(<string>bodyMaxSizeBytes)
     }
 
-    let bodyMaxProcessingSizeBytes = getEnvValue('DATA_CAPTURE_BODY_MAX_PROCESSING_SIZE_BYTES')
-    if(bodyMaxProcessingSizeBytes){
-        dataCapture['body_max_processing_size_bytes'] = parseInt(<string>bodyMaxProcessingSizeBytes)
-    }
-
     if(Object.keys(dataCapture).length > 0 ){
         envConfig['data_capture'] = dataCapture
     }

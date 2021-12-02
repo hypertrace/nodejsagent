@@ -31,7 +31,6 @@ describe('Config tests', () => {
         expect(config.config.data_capture.rpc_body.request).to.equal(true)
         expect(config.config.data_capture.rpc_body.response).to.equal(true)
         expect(config.config.data_capture.body_max_size_bytes).to.equal(131072)
-        expect(config.config.data_capture.body_max_processing_size_bytes).to.equal(1048576)
 
         expect(config.config.resource_attributes).to.eql({})
     });
@@ -60,7 +59,6 @@ describe('Config tests', () => {
         expect(config.config.data_capture.rpc_body.request).to.equal(false)
         expect(config.config.data_capture.rpc_body.response).to.equal(false)
         expect(config.config.data_capture.body_max_size_bytes).to.equal(123457)
-        expect(config.config.data_capture.body_max_processing_size_bytes).to.equal(567890)
 
         expect(config.config.resource_attributes).to.eql({tester01: "tester01"})
         delete process.env.HT_CONFIG_FILE
@@ -84,7 +82,6 @@ describe('Config tests', () => {
         process.env.HT_DATA_CAPTURE_RPC_BODY_REQUEST = 'false'
         process.env.HT_DATA_CAPTURE_RPC_BODY_RESPONSE = 'false'
         process.env.HT_DATA_CAPTURE_BODY_MAX_SIZE_BYTES = '5432109'
-        process.env.HT_DATA_CAPTURE_BODY_MAX_PROCESSING_SIZE_BYTES = '9123412'
         Config.reset()
         const config = Config.getInstance()
         expect(config.config.service_name).to.equal('node_agent_env_001')
@@ -104,7 +101,6 @@ describe('Config tests', () => {
         expect(config.config.data_capture.rpc_body.request).to.equal(false)
         expect(config.config.data_capture.rpc_body.response).to.equal(false)
         expect(config.config.data_capture.body_max_size_bytes).to.equal(5432109)
-        expect(config.config.data_capture.body_max_processing_size_bytes).to.equal(9123412)
 
         delete process.env.HT_SERVICE_NAME
         delete process.env.HT_ENABLED
@@ -123,7 +119,6 @@ describe('Config tests', () => {
         delete process.env.HT_DATA_CAPTURE_RPC_BODY_REQUEST
         delete process.env.HT_DATA_CAPTURE_RPC_BODY_RESPONSE
         delete process.env.HT_DATA_CAPTURE_BODY_MAX_SIZE_BYTES
-        delete process.env.HT_DATA_CAPTURE_BODY_MAX_PROCESSING_SIZE_BYTES
     });
 
 });
