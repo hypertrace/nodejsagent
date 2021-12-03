@@ -132,8 +132,7 @@ export class HttpInstrumentationWrapper {
             for (const [key, value] of Object.entries(response.headers)) {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
-            let bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
-                <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!);
+            let bodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture.body_max_size_bytes, 0);
             const listener = (chunk : any) => {
                 bodyCapture.appendData(chunk);
             };
