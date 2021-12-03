@@ -6,18 +6,48 @@ on:
 
 
 jobs:
+  generate_proto:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: npm install
+      - run: npm run generate_pb
+
+      - name: Cache proto
+        uses: actions/upload-artifact@v2
+        with:
+          name: proto
+          path: ./src/config/generated.*
+
   test:
+    needs: generate_proto
     strategy:
       matrix:
         node_version: [ "8", "10", "12", "14", "16" ]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node_version }}
       - run: npm install
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: proto
+          path: ./src/config/
+
       - run: tsc
+
       - name: Standup Test Docker Services
         run: cd ./test/externalServices && docker-compose up -d
       - name: Wait for Docker
