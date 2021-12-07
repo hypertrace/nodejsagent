@@ -14,6 +14,7 @@
   ],
   "dependencies": {
     "@opentelemetry/api": "1.0.3",
+    "@opentelemetry/core": "1.0.1",
     "@opentelemetry/exporter-collector": "^0.25.0",
     "@opentelemetry/exporter-collector-grpc": "^0.25.0",
     "@opentelemetry/exporter-zipkin": "1.0.1",
@@ -28,11 +29,13 @@
     "@opentelemetry/instrumentation-pg": "^0.26.0",
     "@opentelemetry/node": "0.24.0",
     "@opentelemetry/propagator-b3": "1.0.1",
-    "@opentelemetry/core": "1.0.1",
+    "import-in-the-middle": "^1.2.0",
     "loglevel": "^1.8.0",
     "loglevel-plugin-prefix": "^0.8.4",
     "object-sizeof": "^1.6.1",
+    "opentelemetry-instrumentation-mongoose": "^0.26.1",
     "protobufjs": "^6.11.2",
+    "require-in-the-middle": "^5.1.0",
     "semver": "^7.3.5",
     "shimmer": "^1.2.1",
     "yaml": "^1.10.2"

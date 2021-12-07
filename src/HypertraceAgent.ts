@@ -1,3 +1,8 @@
+// need to load patch first to load patch to support import and require
+import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
+
+require('./instrumentation/instrumentation-patch');
+
 import {NodeTracerProvider} from '@opentelemetry/node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/tracing';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
@@ -60,7 +65,7 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
-        return registerInstrumentations({
+        registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
                 new HttpHypertraceInstrumentation({
@@ -80,9 +85,15 @@ export class HypertraceAgent {
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),
                 new PgInstrumentation(),
-                new MongoDBInstrumentation()
+                new MongoDBInstrumentation(),
+                new MongooseInstrumentation()
             ]
         });
+        // if using express under es6 syntax http/https loading isnt captured
+        // this ensures they are loaded immediately following instrumentation init
+        const http = require('http')
+        const https = require('https')
+        return
     }
 
     setup() {
