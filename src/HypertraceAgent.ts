@@ -1,3 +1,6 @@
+// need to load patch first to load patch to support import and require
+require('./instrumentation/instrumentation-patch');
+
 import {NodeTracerProvider} from '@opentelemetry/node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/tracing';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
@@ -22,6 +25,7 @@ import {logger} from "./Logging";
 import {version} from "./Version";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
+import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
 import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
@@ -60,7 +64,7 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
-        return registerInstrumentations({
+        registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
                 new HttpHypertraceInstrumentation({
@@ -80,9 +84,15 @@ export class HypertraceAgent {
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),
                 new PgInstrumentation(),
-                new MongoDBInstrumentation()
+                new MongoDBInstrumentation(),
+                new MongooseInstrumentation()
             ]
         });
+        // if using express under es6 syntax http/https loading isnt captured
+        // this ensures they are loaded immediately following instrumentation init
+        const http = require('http')
+        const https = require('https')
+        return
     }
 
     setup() {
