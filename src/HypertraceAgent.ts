@@ -1,6 +1,4 @@
 // need to load patch first to load patch to support import and require
-import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
-
 require('./instrumentation/instrumentation-patch');
 
 import {NodeTracerProvider} from '@opentelemetry/node';
@@ -27,6 +25,7 @@ import {logger} from "./Logging";
 import {version} from "./Version";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
+import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
 import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
