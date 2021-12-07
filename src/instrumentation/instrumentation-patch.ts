@@ -62,6 +62,7 @@ InstrumentationBase.prototype.enable = function() {
         // @ts-ignore
         this._hooks.push(hookFn);
         RequireInTheMiddle([module.name], { internals: true }, hookFn);
+        // @ts-ignore
         ImportInTheMiddle([module.name], { internals: true }, hookFn);
     }
 }
