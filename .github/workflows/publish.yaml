@@ -37,12 +37,14 @@ jobs:
           name: proto
           path: ./src/config/
 
-      - run: npm run build
+      - run: tsc
 
       - name: Generate release
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: npm run build
 
       - name: Save artifact
         uses: actions/upload-artifact@v2

@@ -84,7 +84,7 @@
   },
   "scripts": {
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' HT_LOG_LEVEL=DEBUG mocha -r ts-node/register 'test/**/*.ts'",
-    "build": "tsc && cp src/config/generated.* ./lib/config && npm pack",
+    "build": "tsc && npm pack",
     "coverage": "nyc --reporter=lcov npm run test",
     "generate_pb": "pbjs --keep-case -t static-module -w default -o src/config/generated.js agent-config/proto/hypertrace/agent/config/v1/config.proto && pbts --keep-case -o ./src/config/generated.d.ts ./src/config/generated.js"
   }

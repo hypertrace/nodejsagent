@@ -26,3 +26,6 @@ hypertrace-nodejsagent-*.tgz
 coverage/
 /src/config/generated.d.ts
 /src/config/generated.js
+
+
+.DS_STORE
