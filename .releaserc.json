@@ -16,8 +16,25 @@
       ]
     }],
     "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "npm version ${nextRelease.version} && npm run build"
+      }
+    ],
     ["@semantic-release/npm", {
       "npmPublish": false
-    }]
+    }],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "hypertrace-nodejsagent-*.tgz",
+            "label": "Distribution"
+          }
+        ]
+      }
+    ]
   ]
 }

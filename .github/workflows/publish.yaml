@@ -39,20 +39,10 @@ jobs:
 
       - run: tsc
 
-#      - name: Get next version number
-#        run: echo "NEW_VERSION=$(npm run next-version)" >> $GITHUB_ENV
-#
-#      - name: Update version in package.json
-#        run: npm version ${{ env.NEW_VERSION }}
-#
-#      - run: npm run build
-
       - name: Generate release
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - run: npm run build
 
       - name: Save artifact
         uses: actions/upload-artifact@v2

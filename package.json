@@ -45,6 +45,7 @@
     "@nestjs/common": "^8.2.0",
     "@nestjs/core": "^8.1.1",
     "@nestjs/platform-express": "^8.1.1",
+    "@semantic-release/exec": "^6.0.2",
     "@semantic-release/github": "^8.0.1",
     "@semantic-release/npm": "^8.0.2",
     "@types/chai": "^4.2.21",
