@@ -18,17 +18,6 @@
     "@semantic-release/release-notes-generator",
     ["@semantic-release/npm", {
       "npmPublish": false
-    }],
-    [
-      "@semantic-release/github",
-      {
-        "assets": [
-          {
-            "path": "hypertrace-nodejsagent-*.tgz",
-            "label": "Distribution"
-          }
-        ]
-      }
-    ]
+    }]
   ]
 }
