@@ -1,6 +1,6 @@
 {
   "name": "@hypertrace/nodejsagent",
-  "version": "0.0.0",
+  "version": "1.0.0-rc.14",
   "description": "Hypertrace Node.js Agent",
   "author": "Traceable Inc.",
   "license": "Apache-2.0",
@@ -86,7 +86,7 @@
     "typescript-tslint-plugin": "^0.5.5"
   },
   "scripts": {
-    "next-version": "semantic-release --dry-run | grep 'The next release version is' | grep -oEi \"\\s([0-9].*)$\" | xargs" ,
+    "next-version": "semantic-release --dry-run | grep 'The next release version is' | grep -oEi \"\\s([0-9].*)$\" | xargs",
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' HT_LOG_LEVEL=DEBUG mocha -r ts-node/register 'test/**/*.ts'",
     "build": "tsc && npm pack",
     "coverage": "nyc --reporter=lcov npm run test",
