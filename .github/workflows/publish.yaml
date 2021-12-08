@@ -49,5 +49,4 @@ jobs:
       - name: Save artifact
         uses: actions/upload-artifact@v2
         with:
-          name: package
           path: ./hypertrace-nodejsagent-*.tgz
