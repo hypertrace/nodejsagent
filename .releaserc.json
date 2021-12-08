@@ -17,14 +17,15 @@
     }],
     "@semantic-release/release-notes-generator",
     ["@semantic-release/npm", {
-      "npmPublish": true
+      "npmPublish": false,
+      "tarballDir": "./dist"
     }],
     [
       "@semantic-release/github",
       {
         "assets": [
           {
-            "path": "hypertrace-nodejsagent-*.tgz",
+            "path": "dist/*.tgz",
             "label": "Distribution"
           }
         ]
