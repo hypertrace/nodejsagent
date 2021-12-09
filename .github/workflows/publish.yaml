@@ -1,7 +1,7 @@
 name: Publish
 on:
   push:
-    branches: [main]
+    branches: [main, release]
 jobs:
   generate_proto:
     runs-on: ubuntu-20.04
@@ -40,6 +40,7 @@ jobs:
       - run: tsc
 
       - name: Generate release
+        if: contains(github.ref, "release")
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
