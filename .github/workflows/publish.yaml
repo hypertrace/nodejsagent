@@ -40,7 +40,7 @@ jobs:
       - run: tsc
 
       - name: Generate release
-        if: contains(github.ref, "release")
+        if: contains(github.ref, 'release')
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
