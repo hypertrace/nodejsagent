@@ -1,24 +1,62 @@
 name: Pr build
 on:
   pull_request:
+  push:
     branches: [main]
 
+
 jobs:
+  generate_proto:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: npm install
+      - run: npm run generate_pb
+
+      - name: Cache proto
+        uses: actions/upload-artifact@v2
+        with:
+          name: proto
+          path: ./src/config/generated.*
+
   test:
+    needs: generate_proto
     strategy:
       matrix:
         node_version: [ "8", "10", "12", "14", "16" ]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node_version }}
       - run: npm install
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: proto
+          path: ./src/config/
+
       - run: tsc
+
       - name: Standup Test Docker Services
         run: cd ./test/externalServices && docker-compose up -d
       - name: Wait for Docker
         run: sleep 100
-      - name: Run Tests
-        run: npm run test
+      - name: Install codecov
+        run: npm install codecov -g
+      - name: Run Tests With Coverage
+        run: npm run coverage
+
+      - name: Upload coverage # only upload results from 1 matrix version, not all
+        if: matrix.node_version == '16'
+        run: codecov --token="${{ secrets.CODECOV_TOKEN }}"

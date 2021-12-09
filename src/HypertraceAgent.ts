@@ -1,3 +1,6 @@
+// need to load patch first to load patch to support import and require
+require('./instrumentation/instrumentation-patch');
+
 import {NodeTracerProvider} from '@opentelemetry/node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/tracing';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
@@ -5,7 +8,7 @@ import {Config} from './config/config'
 import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
 import {ExpressLayerType} from "@opentelemetry/instrumentation-express/build/src/enums/ExpressLayerType";
 import {hypertrace} from "./config/generated";
-import {CompositePropagator, HttpTraceContextPropagator} from "@opentelemetry/core";
+import {CompositePropagator, W3CTraceContextPropagator} from "@opentelemetry/core";
 import {B3Propagator} from "@opentelemetry/propagator-b3";
 import {TextMapPropagator} from "@opentelemetry/api";
 import {HttpInstrumentationWrapper} from "./instrumentation/HttpInstrumentationWrapper";
@@ -22,6 +25,11 @@ import {logger} from "./Logging";
 import {version} from "./Version";
 import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
+import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
+import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
+import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
+import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
+import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
 
 const api = require("@opentelemetry/api");
 
@@ -53,11 +61,13 @@ export class HypertraceAgent {
         this.setup()
         let httpWrapper = new HttpInstrumentationWrapper(this.config.config)
 
+        patchClientRequest()
         patchExpress()
-        return registerInstrumentations({
+        patchSails()
+        registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
-                new HttpInstrumentation({
+                new HttpHypertraceInstrumentation({
                     requestHook: httpWrapper.IncomingRequestHook,
                     startOutgoingSpanHook: httpWrapper.OutgoingRequestHook,
                     applyCustomAttributesOnSpan: httpWrapper.CustomAttrs,
@@ -69,13 +79,20 @@ export class HypertraceAgent {
                     requestCallback: koaRequestCallback,
                     responseCallback: koaResponseCallback
                 }),
+                new GrpcInstrumentation(),
                 new GraphQLInstrumentation(),
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),
                 new PgInstrumentation(),
-                new MongoDBInstrumentation()
+                new MongoDBInstrumentation(),
+                new MongooseInstrumentation()
             ]
         });
+        // if using express under es6 syntax http/https loading isnt captured
+        // this ensures they are loaded immediately following instrumentation init
+        const http = require('http')
+        const https = require('https')
+        return
     }
 
     setup() {
@@ -108,7 +125,7 @@ export class HypertraceAgent {
         for (let propagationType of this.config.config.propagation_formats) {
             if (propagationType == 'TRACECONTEXT') {
                 logger.debug(`Adding tracecontext propagator`)
-                formats.push(new HttpTraceContextPropagator())
+                formats.push(new W3CTraceContextPropagator())
             } else if (propagationType == "B3") {
                 logger.debug(`Adding b3 propagator`)
                 formats.push(new B3Propagator())

@@ -1,12 +1,19 @@
-import {logger} from "../../Logging";
-
-const express = require("express");
 import {context, trace} from "@opentelemetry/api";
 import {Config} from "../../config/config";
 import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
 import {BodyCapture} from "../BodyCapture";
+import {MESSAGE} from "../../filter/Filter";
 
 const shimmer = require('shimmer');
+export function available(mod : string){
+    try {
+        require.resolve(mod)
+        return true
+    } catch {
+        return false
+    }
+}
+
 
 function ResponseCaptureWithConfig(config : any) : Function {
     return function (original : Function) {
@@ -19,7 +26,8 @@ function ResponseCaptureWithConfig(config : any) : Function {
                     // @ts-ignore
                     let headerContentType =  this.get('Content-Type')
                     if(HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
-                        let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes)
+                        let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                            Config.getInstance().config.data_capture.body_max_processing_size_bytes)
                         bodyCapture.appendData(arguments[0])
                         span.setAttribute('http.response.body', bodyCapture.dataString())
                     }
@@ -32,11 +40,10 @@ function ResponseCaptureWithConfig(config : any) : Function {
 }
 
 export function patchExpress(){
+    if(!available('express')){
+        return
+    }
+    const express = require('express')
     shimmer.wrap(express.response, 'send', ResponseCaptureWithConfig(Config.getInstance()))
     shimmer.wrap(express.response, 'json', ResponseCaptureWithConfig(Config.getInstance()))
-}
-
-export function unpatchExpress(){
-    shimmer.unwrap(express.response, 'send')
-    shimmer.unwrap(express.response, 'json')
 }

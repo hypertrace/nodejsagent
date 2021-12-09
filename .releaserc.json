@@ -1,0 +1,35 @@
+{
+  "branches": [
+    "release",
+    {
+      "name": "main",
+      "prerelease": "rc"
+    }
+  ],
+  "plugins": [
+    ["@semantic-release/commit-analyzer", {
+      "releaseRules": [
+        {"breaking": true, "release": "major"},
+        {"type": "feat", "release": "minor"},
+        {"type": "*", "release": "patch"},
+        {"type": null, "release": "patch"}
+      ]
+    }],
+    "@semantic-release/release-notes-generator",
+    ["@semantic-release/npm", {
+      "npmPublish": true,
+      "tarballDir": "./dist"
+    }],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "dist/*.tgz",
+            "label": "Distribution"
+          }
+        ]
+      }
+    ]
+  ]
+}

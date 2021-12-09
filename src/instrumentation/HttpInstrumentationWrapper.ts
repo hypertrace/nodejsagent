@@ -2,18 +2,20 @@ import {
     ClientRequest,
     IncomingHttpHeaders,
     IncomingMessage,
-    OutgoingHttpHeaders, RequestOptions,
+    OutgoingHttpHeaders,
+    RequestOptions,
     ServerResponse
 } from "http";
-import {Span} from "@opentelemetry/api";
+import {context, Span, SpanAttributes} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
-import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
-const shimmer = require('shimmer');
-
-import {ResponseCaptureWithConfig} from "./wrapper/OutgoingRequestWrapper";
+import {Registry} from "../filter/Registry";
+import {filterError, MESSAGE, REQUEST_TYPE, STATUS_CODE} from "../filter/Filter";
+import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
+import {getRPCMetadata, RPCType} from "@opentelemetry/core";
+import {SemanticAttributes} from "@opentelemetry/semantic-conventions";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -40,21 +42,30 @@ export class HttpInstrumentationWrapper {
     incomingRequestHook(span: Span, request: ClientRequest | IncomingMessage) {
         if(this.requestHeaderCaptureEnabled) {
             let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
-            for (const [key, value] of Object.entries(headers)) {
-                span.setAttribute(`http.request.header.${key}`, <string>value)
+            for (const key in headers) {
+                span.setAttribute(`http.request.header.${key}`, <string>headers[key])
             }
         }
         // client outbound
         if(request instanceof ClientRequest) {
-            let headers = request.getHeaders()
-            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-                shimmer.wrap(request, "write", ResponseCaptureWithConfig(span, Config.getInstance()))
-            }
-
+            // @ts-ignore
+            request.hypertraceSpan = span
         } else { // server inbound
+            this.setIncomingRequestAttributes(span, request);
+
             let headers = request.headers
+            let filterResult = Registry.getInstance().applyFilters(span,
+                request.url,
+                headers,
+                undefined,
+                REQUEST_TYPE.HTTP
+            )
+            if(filterResult){
+               throw filterError()
+            }
+            let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!,
+                <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!)
             if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
-                let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!)
                 const listener = (chunk: any) => {
                     bodyCapture.appendData(chunk)
                 }
@@ -63,6 +74,26 @@ export class HttpInstrumentationWrapper {
                 request.once("end", () => {
                     request.removeListener('data', listener)
                     let bodyString = bodyCapture.dataString()
+                    // @ts-ignore
+                    if(request.res){ // this means we are in a express based app
+                        let filterResult = Registry.getInstance().applyFilters(span,
+                            request.url,
+                            headers,
+                            bodyCapture.processableString(),
+                            REQUEST_TYPE.HTTP
+                        )
+                        if(filterResult){
+                            // @ts-ignore
+                            request.res.statusCode = STATUS_CODE
+                            // @ts-ignore
+                            request.res.statusMessage = MESSAGE
+                            // @ts-ignore
+                            request.res.req.next(filterError())
+
+                            // @ts-ignore
+                            //request.res.socket.destroy()
+                        }
+                    }
                     span.setAttribute("http.request.body", bodyString)
                 });
             }
@@ -77,8 +108,8 @@ export class HttpInstrumentationWrapper {
             if(!outgoingHeaders){
                 return attrs
             }
-            for (const [key, value] of Object.entries(outgoingHeaders)) {
-                attrs[`http.request.header.${key}`.toLowerCase()] = <string>value
+            for (const key in outgoingHeaders) {
+                attrs[`http.request.header.${key}`.toLowerCase()] = outgoingHeaders[key]
             }
         }
         return attrs
@@ -87,10 +118,10 @@ export class HttpInstrumentationWrapper {
 
 
     customAttrs(span: Span, request: ClientRequest | IncomingMessage, response: IncomingMessage | ServerResponse): void {
-        if(this.responseHeaderCaptureEnabled && response instanceof ServerResponse) {
+        if(response instanceof ServerResponse && this.responseHeaderCaptureEnabled) {
             let headers = (<ServerResponse>response).getHeaders()
-            for (const [key, value] of Object.entries(headers)) {
-                span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
+            for(const key in headers) {
+                span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>headers[key])
             }
         }
     }
@@ -101,7 +132,7 @@ export class HttpInstrumentationWrapper {
             for (const [key, value] of Object.entries(response.headers)) {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
-            let bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes);
+            let bodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture.body_max_size_bytes, 0);
             const listener = (chunk : any) => {
                 bodyCapture.appendData(chunk);
             };
@@ -138,4 +169,24 @@ export class HttpInstrumentationWrapper {
         }
         return false
     }
+
+    // We need to collect request data before sending span to Filter API
+    private setIncomingRequestAttributes = (span: Span, request: IncomingMessage) => {
+        const { socket } = request;
+        const { localAddress, localPort, remoteAddress, remotePort } = socket;
+        const rpcMetadata = getRPCMetadata(context.active());
+
+        const attributes: SpanAttributes = {
+            [SemanticAttributes.NET_HOST_IP]: localAddress,
+            [SemanticAttributes.NET_HOST_PORT]: localPort,
+            [SemanticAttributes.NET_PEER_IP]: remoteAddress,
+            [SemanticAttributes.NET_PEER_PORT]: remotePort,
+        };
+
+        if (rpcMetadata?.type === RPCType.HTTP && rpcMetadata.route !== undefined) {
+            attributes[SemanticAttributes.HTTP_ROUTE] = rpcMetadata.route;
+        }
+
+        span.setAttributes(attributes);
+    };
 }

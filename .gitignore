@@ -17,3 +17,15 @@ src/**/*.js
 
 # ide
 /.idea
+
+# built artifact
+hypertrace-nodejsagent-*.tgz
+
+# Code coverage
+.nyc_output/
+coverage/
+/src/config/generated.d.ts
+/src/config/generated.js
+
+
+.DS_STORE
