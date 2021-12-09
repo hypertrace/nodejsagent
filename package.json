@@ -9,6 +9,9 @@
     "type": "git",
     "url": "git://github.com/hypertrace/nodejsagent"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "lib/**/*"
   ],
