@@ -3,6 +3,7 @@ import {Config} from "../../config/config";
 import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
 import {BodyCapture} from "../BodyCapture";
 import {MESSAGE} from "../../filter/Filter";
+import {logger} from "../../Logging";
 
 const shimmer = require('shimmer');
 export function available(mod : string){
@@ -14,6 +15,25 @@ export function available(mod : string){
     }
 }
 
+export function ResponseEnded(span, response, responseEndArgs) {
+    try { // this call happens within a SafeExecuteInTheMiddle;
+          // a raised exception will prevent the original resp.apply.end from being applied
+          // which would cause some of the response not to write to client
+        if(span) {
+            // @ts-ignore
+            let headerContentType =  response.get('Content-Type')
+            if(HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
+                let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                    Config.getInstance().config.data_capture.body_max_processing_size_bytes)
+                bodyCapture.appendData(responseEndArgs[0])
+                span.setAttribute('http.response.body', bodyCapture.dataString())
+            }
+        }
+    } catch (e) {
+        logger.debug('error capturing resp body', e)
+    }
+
+}
 
 function ResponseCaptureWithConfig(config : any) : Function {
     return function (original : Function) {
