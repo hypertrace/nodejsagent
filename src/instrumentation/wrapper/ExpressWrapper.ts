@@ -20,10 +20,12 @@ export function ResponseEnded(span, response, responseEndArgs) {
           // a raised exception will prevent the original resp.apply.end from being applied
           // which would cause some of the response not to write to client
         if(span) {
+            if(responseEndArgs[0] && responseEndArgs[0].length === 1 && responseEndArgs[0][0] === 125 ){ return } // sails writes an erroneous Buffer([0: 125])
             // @ts-ignore
             let headerContentType =  response.get('Content-Type')
             if(HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
-                let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                // @ts-ignore
+                let bodyCapture : BodyCapture = span.hypertraceBodyCapture ||  new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
                     Config.getInstance().config.data_capture.body_max_processing_size_bytes)
                 bodyCapture.appendData(responseEndArgs[0])
                 span.setAttribute('http.response.body', bodyCapture.dataString())
@@ -43,11 +45,22 @@ function ResponseCaptureWithConfig(config : any) : Function {
             if(responseBodyEnabled) {
                 let span = trace.getSpan(context.active())
                 if(span) {
+
                     // @ts-ignore
                     let headerContentType =  this.get('Content-Type')
                     if(HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
-                        let bodyCapture : BodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
-                            Config.getInstance().config.data_capture.body_max_processing_size_bytes)
+                        let bodyCapture : BodyCapture;
+                        // @ts-ignore
+                        if(span.hypertraceBodyCapture) {
+                            // @ts-ignore
+                            bodyCapture = span.hypertraceBodyCapture;
+                        } else {
+                            bodyCapture = new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
+                                Config.getInstance().config.data_capture.body_max_processing_size_bytes)
+                            // @ts-ignore
+                            span.hypertraceBodyCapture = bodyCapture;
+                        }
+
                         bodyCapture.appendData(arguments[0])
                         span.setAttribute('http.response.body', bodyCapture.dataString())
                     }
