@@ -19,14 +19,15 @@ export function ResponseEnded(span, response, responseEndArgs) {
     try { // this call happens within a SafeExecuteInTheMiddle;
           // a raised exception will prevent the original resp.apply.end from being applied
           // which would cause some of the response not to write to client
-        if(span) {
-            if(responseEndArgs[0] && responseEndArgs[0].length === 1 && responseEndArgs[0][0] === 125 ){ return } // sails writes an erroneous Buffer([0: 125])
+        if(span && span.inHtScope != true) {
+
             // @ts-ignore
             let headerContentType =  response.get('Content-Type')
             if(HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
                 // @ts-ignore
                 let bodyCapture : BodyCapture = span.hypertraceBodyCapture ||  new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
                     Config.getInstance().config.data_capture.body_max_processing_size_bytes)
+                if(response.get('Content-Length') == bodyCapture.getContentLength()){ return }
                 bodyCapture.appendData(responseEndArgs[0])
                 span.setAttribute('http.response.body', bodyCapture.dataString())
             }
@@ -42,10 +43,9 @@ function ResponseCaptureWithConfig(config : any) : Function {
         const responseBodyEnabled = config.config.data_capture.http_body.response
         const maxCaptureSize = config.config.data_capture.body_max_size_bytes
         return function(){
+            let span = trace.getSpan(context.active())
             if(responseBodyEnabled) {
-                let span = trace.getSpan(context.active())
                 if(span) {
-
                     // @ts-ignore
                     let headerContentType =  this.get('Content-Type')
                     if(HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
