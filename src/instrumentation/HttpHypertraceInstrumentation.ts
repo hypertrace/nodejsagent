@@ -449,12 +449,10 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                         ..._args: ResponseEndArgs
                     ) {
                         response.end = originalEnd;
+                        ResponseEnded(span, this, _args)
                         // Cannot pass args of type ResponseEndArgs,
                         const returned = safeExecuteInTheMiddle(
-                            () => {
-                                ResponseEnded(span, this, _args)
-                                response.end.apply(this, arguments as never)
-                            },
+                            () => response.end.apply(this, arguments as never),
                             error => {
                                 if (error) {
                                     utils.setSpanWithError(span, error);
