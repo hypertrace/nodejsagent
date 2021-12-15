@@ -30,6 +30,12 @@ describe('Agent tests', () => {
         res.send({ 'status': 'post_success' });
     })
 
+    app.post('/test_post_end', (req: any, res: any) => {
+        let body = JSON.stringify(req.body)
+        res.writeHead(200, {'Content-Type': 'application/json'})
+        res.end(body)
+    })
+
     app.get('/circular-test', (req : any, res: any) => {
         http.request({ host: 'localhost', port: 8000, path: '/test' }, (res2) => {
             var str = "";
@@ -101,6 +107,28 @@ describe('Agent tests', () => {
         let requestSpan = spans[1]
         expect(requestSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
         expect(requestSpan.attributes['http.response.body']).to.eql("{\"status\":\"post_success\"}")
+    })
+
+    it('can capture response body when use with express.response.end', async () => {
+        await httpRequest.post({
+                host: 'localhost',
+                port: 8000,
+                path: '/test_post_end',
+                headers: {
+                    'content-type': "application/json"
+                }
+            },
+            JSON.stringify({"test": "req data"}))
+
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(2)
+        let serverSpan = spans[0]
+        expect(serverSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
+        expect(serverSpan.attributes['http.response.body']).to.eql("{\"test\":\"req data\"}")
+
+        let requestSpan = spans[1]
+        expect(requestSpan.attributes['http.request.body']).to.eql("{\"test\":\"req data\"}")
+        expect(requestSpan.attributes['http.response.body']).to.eql("{\"test\":\"req data\"}")
     })
 
     it('will collect only configured max body size', async () => {

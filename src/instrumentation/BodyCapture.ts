@@ -6,7 +6,7 @@ export class BodyCapture {
     private maxReportingSize: number;
     private full: boolean
     private maxProcessingSize: number;
-
+    private contentLength: number;
     // whichever is larger(processing or reporting) use that to limit how much data BodyCapture will record
     private internalMaxRecordingSize: number;
 
@@ -17,6 +17,7 @@ export class BodyCapture {
         this.maxProcessingSize = maxProcessingSize // data that is sent to filter api internally
         this.internalMaxRecordingSize = Math.max(maxSize, maxProcessingSize);
         this.full = false
+        this.contentLength = 0;
     }
 
     appendData(chunk : any) {
@@ -42,11 +43,16 @@ export class BodyCapture {
             this.data.push(gapFill)
             this.full = true
         }
+        this.contentLength += chunk.length;
         this.currentSize += chunkSize
     }
 
     processableString() : string {
         return Buffer.concat(this.data).toString('utf8', 0, this.maxProcessingSize)
+    }
+
+    getContentLength() {
+        return this.contentLength;
     }
 
     dataString() : string{
