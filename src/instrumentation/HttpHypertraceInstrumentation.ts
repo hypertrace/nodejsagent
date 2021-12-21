@@ -52,6 +52,7 @@ import { RPCMetadata, RPCType, setRPCMetadata } from '@opentelemetry/core';
 import {IncomingMessage} from "http";
 import {filter} from "rxjs/operators";
 import {MESSAGE, STATUS_CODE} from "../filter/Filter";
+import {ResponseEnded} from "./wrapper/ExpressWrapper";
 
 /**
  * Http instrumentation instrumentation for Opentelemetry
@@ -448,6 +449,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                         ..._args: ResponseEndArgs
                     ) {
                         response.end = originalEnd;
+                        ResponseEnded(span, this, _args)
                         // Cannot pass args of type ResponseEndArgs,
                         const returned = safeExecuteInTheMiddle(
                             () => response.end.apply(this, arguments as never),
