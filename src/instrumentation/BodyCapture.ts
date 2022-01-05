@@ -33,8 +33,11 @@ export class BodyCapture {
         if(!Buffer.isBuffer(chunk)) {
             if(chunk instanceof Object){
                 receivedData = JSON.stringify(chunk)
+            } else {
+                receivedData = chunk.toString()
             }
-            receivedData = Buffer.from(chunk).toString()
+        } else {
+            receivedData = chunk.toString()
         }
 
         if(this.currentSize + chunkSize <= this.internalMaxRecordingSize) {
