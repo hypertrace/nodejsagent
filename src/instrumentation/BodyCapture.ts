@@ -34,14 +34,14 @@ export class BodyCapture {
             if(chunk instanceof Object){
                 receivedData = JSON.stringify(chunk)
             } else {
-                receivedData = chunk.toString()
+                receivedData = Buffer.from(chunk).toString()
             }
         } else {
             receivedData = chunk.toString()
         }
 
         if(this.currentSize + chunkSize <= this.internalMaxRecordingSize) {
-            this.data += (receivedData.toString())
+            this.data += receivedData
         } else {
             let remainingSpace = this.internalMaxRecordingSize - this.currentSize
             let gapFill = receivedData.slice(0, remainingSpace)
@@ -61,6 +61,6 @@ export class BodyCapture {
     }
 
     dataString() : string{
-        return  this.data.slice(0, this.maxReportingSize)
+        return this.data.slice(0, this.maxReportingSize)
     }
 }
