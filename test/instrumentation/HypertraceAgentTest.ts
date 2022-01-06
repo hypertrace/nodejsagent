@@ -64,4 +64,10 @@ describe('Agent tests', () => {
         expect(provider.resource.attributes['another_attr']).to.equal('foo')
         Config.getInstance().config.resource_attributes = original
     })
+
+    it('will override the version if provided', () => {
+        AgentForTest.renew('1.2.3')
+        let provider = AgentForTest.getInstance()._provider
+        expect(provider.resource.attributes['telemetry.sdk.version']).to.equal('1.2.3')
+    })
 });
