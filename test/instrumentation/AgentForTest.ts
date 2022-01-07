@@ -11,12 +11,12 @@ import {
 export class AgentForTest extends HypertraceAgent {
     private static instance: AgentForTest;
 
-    private constructor() {
-        super()
+    private constructor(overrideVersion?: string) {
+        super(overrideVersion)
     }
 
-    public static renew() {
-        AgentForTest.instance = new AgentForTest()
+    public static renew(overrideVersion?: string) {
+        AgentForTest.instance = new AgentForTest(overrideVersion)
     }
 
     public static getInstance(): AgentForTest {

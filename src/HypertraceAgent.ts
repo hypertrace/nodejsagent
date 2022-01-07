@@ -43,12 +43,12 @@ export class HypertraceAgent {
     public config: Config
     public exporter: SpanExporter | undefined
 
-    public constructor() {
+    public constructor(overrideVersion?: string ) {
         logger.info("Initializing Hypertrace Agent")
         logger.info(`Hypertrace Version: ${version}`)
         logger.info(`Node version: ${process.version}`)
         this.config = Config.getInstance()
-        this._provider = this.setupTracingProvider()
+        this._provider = this.setupTracingProvider(overrideVersion)
         logger.info("Successfully initialized Hypertrace Agent")
     }
 
@@ -103,11 +103,12 @@ export class HypertraceAgent {
     }
 
 
-    private setupTracingProvider(): NodeTracerProvider {
+    private setupTracingProvider(overrideVersion?: string): NodeTracerProvider {
+        let reportedVersion = overrideVersion ? overrideVersion : version
         let resourceAttributes = {
             'service.name': this.config.config.service_name,
             'service.instance.id': process.pid,
-            'telemetry.sdk.version': version,
+            'telemetry.sdk.version': reportedVersion,
             'telemetry.sdk.name': 'hypertrace',
             'telemetry.sdk.language': 'nodejs'
         }
