@@ -1,8 +1,8 @@
 // need to load patch first to load patch to support import and require
 require('./instrumentation/instrumentation-patch');
 
-import {NodeTracerProvider} from '@opentelemetry/node';
-import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/tracing';
+import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
+import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/sdk-trace-base';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
 import {Config} from './config/config'
 import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
@@ -23,7 +23,7 @@ import {koaRequestCallback, koaResponseCallback} from "./instrumentation/wrapper
 import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 import {logger} from "./Logging";
 import {version} from "./Version";
-import {CollectorTraceExporter} from "@opentelemetry/exporter-collector-grpc";
+import {OTLPTraceExporter} from "@opentelemetry/exporter-trace-otlp-grpc";
 import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
 import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
@@ -158,7 +158,7 @@ export class HypertraceAgent {
             return new InMemorySpanExporter()
         } else {
             logger.info(`Creating OTLP exporter reporting to: ${this.config.config.reporting.endpoint}`)
-            return new CollectorTraceExporter({
+            return new OTLPTraceExporter({
                 url: this.config.config.reporting.endpoint
             })
         }
