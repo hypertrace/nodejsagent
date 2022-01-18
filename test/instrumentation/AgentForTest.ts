@@ -6,7 +6,7 @@ import {
     ReadableSpan,
     SimpleSpanProcessor,
     SpanExporter
-} from "@opentelemetry/tracing";
+} from '@opentelemetry/sdk-trace-base'
 
 export class AgentForTest extends HypertraceAgent {
     private static instance: AgentForTest;
