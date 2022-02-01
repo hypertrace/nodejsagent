@@ -6,7 +6,7 @@ import {
     RequestOptions,
     ServerResponse
 } from "http";
-import {context, Span, SpanAttributes} from "@opentelemetry/api";
+import {context, Span, SpanAttributes, trace} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
@@ -16,6 +16,8 @@ import {filterError, MESSAGE, REQUEST_TYPE, STATUS_CODE} from "../filter/Filter"
 import AgentConfig = hypertrace.agent.config.v1.AgentConfig;
 import {getRPCMetadata, RPCType} from "@opentelemetry/core";
 import {SemanticAttributes} from "@opentelemetry/semantic-conventions";
+import {Framework} from "./Framework";
+import {hypertraceDomain} from "../HypertraceAgent";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -63,38 +65,62 @@ export class HttpInstrumentationWrapper {
             if(filterResult){
                throw filterError()
             }
+
             let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!,
                 <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!)
-            if (this.shouldCaptureBody(this.requestBodyCaptureEnabled, headers)) {
+            if (this.shouldCaptureBody(<boolean>Config.getInstance().config.data_capture!.http_body!.request!, headers)) {
                 const listener = (chunk: any) => {
                     bodyCapture.appendData(chunk)
                 }
                 request.on("data", listener);
 
-                request.once("end", () => {
-                    request.removeListener('data', listener)
-                    let bodyString = bodyCapture.dataString()
-                    // @ts-ignore
-                    if(request.res){ // this means we are in a express based app
-                        let filterResult = Registry.getInstance().applyFilters(span,
-                            request.url,
-                            headers,
-                            bodyCapture.processableString(),
-                            REQUEST_TYPE.HTTP
-                        )
-                        if(filterResult){
-                            // @ts-ignore
-                            request.res.statusCode = STATUS_CODE
-                            // @ts-ignore
-                            request.res.statusMessage = MESSAGE
-                            // @ts-ignore
-                            request.res.req.next(filterError())
 
-                            // @ts-ignore
-                            //request.res.socket.destroy()
+                request.once("end", () => {
+                    hypertraceDomain.run(function() {
+
+                        request.removeListener('data', listener)
+                        let bodyString = bodyCapture.dataString()
+                        span.setAttribute('http.request.body', bodyString)
+                        // @ts-ignore
+                        if(request.res){ // this means we are in a express based app
+                            let filterResult = Registry.getInstance().applyFilters(span!,
+                                request.url,
+                                headers,
+                                bodyCapture.processableString(),
+                                REQUEST_TYPE.HTTP
+                            )
+                            if(filterResult){
+                                // we need to use domains to catch an async exception
+                                // if the end user app does not have any middlewares reading request body,
+                                // applying filters will not have anywhere to propagate the error
+                                // so we will see unintended status code / message pair
+                                // ex: 200 Forbidden
+                                // additionally, if user is using event listeners on request data,
+                                // since body read occurs on event emission if our event emitter determines to filter request
+                                // user event listeners cannot be prevented from running(or replaced, or mutated) - this will cause
+                                // errors since we've already written + closed the response
+                                // throwing an uncaught error that is bound within a domain allows us to achieve both:
+                                // cancel request without it propagating further through the app &
+                                // set the desired response
+                                if(Framework.getInstance().isPureExpress()){
+                                    // @ts-ignore
+                                    request.res.status(403)
+                                    // @ts-ignore
+                                    request.res.end()
+                                    // @ts-ignore
+                                    hypertraceDomain.add(request)
+                                    throw filterError()
+                                } else {
+                                    // @ts-ignore
+                                    request.res.statusCode = 403
+                                    // @ts-ignore
+                                    request.res.statusMessage = 'FORBIDDEN'
+                                    // @ts-ignore
+                                    request.next(filterError())
+                                }
+                            }
                         }
-                    }
-                    span.setAttribute("http.request.body", bodyString)
+                    })
                 });
             }
         }
