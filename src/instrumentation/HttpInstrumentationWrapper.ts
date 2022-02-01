@@ -22,14 +22,13 @@ import {hypertraceDomain} from "../HypertraceAgent";
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
 
-
 export class HttpInstrumentationWrapper {
     private agentConfig: AgentConfig
     private requestHeaderCaptureEnabled: boolean
     private requestBodyCaptureEnabled: boolean
     private responseHeaderCaptureEnabled: boolean
     private responseBodyCaptureEnabled: boolean
-    private maxBodySizeBytes : number
+    private maxBodySizeBytes: number
 
     constructor(config: AgentConfig) {
         this.agentConfig = config
@@ -42,14 +41,14 @@ export class HttpInstrumentationWrapper {
     }
 
     incomingRequestHook(span: Span, request: ClientRequest | IncomingMessage) {
-        if(this.requestHeaderCaptureEnabled) {
+        if (this.requestHeaderCaptureEnabled) {
             let headers = request instanceof IncomingMessage ? request.headers : request.getHeaders()
             for (const key in headers) {
                 span.setAttribute(`http.request.header.${key}`, <string>headers[key])
             }
         }
         // client outbound
-        if(request instanceof ClientRequest) {
+        if (request instanceof ClientRequest) {
             // @ts-ignore
             request.hypertraceSpan = span
         } else { // server inbound
@@ -62,9 +61,16 @@ export class HttpInstrumentationWrapper {
                 undefined,
                 REQUEST_TYPE.HTTP
             )
-            if(filterResult){
-               throw filterError()
-            }
+            if (filterResult) {
+                if (Framework.getInstance().isPureExpress()) {
+                    hypertraceDomain.run(function () {
+                        throw filterError()
+                    })
+                } else {
+                        throw filterError()
+                    }
+                }
+
 
             let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!,
                 <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!)
@@ -76,20 +82,20 @@ export class HttpInstrumentationWrapper {
 
 
                 request.once("end", () => {
-                    hypertraceDomain.run(function() {
+                    hypertraceDomain.run(function () {
 
                         request.removeListener('data', listener)
                         let bodyString = bodyCapture.dataString()
                         span.setAttribute('http.request.body', bodyString)
                         // @ts-ignore
-                        if(request.res){ // this means we are in a express based app
+                        if (request.res) { // this means we are in a express based app
                             let filterResult = Registry.getInstance().applyFilters(span!,
                                 request.url,
                                 headers,
                                 bodyCapture.processableString(),
                                 REQUEST_TYPE.HTTP
                             )
-                            if(filterResult){
+                            if (filterResult) {
                                 // we need to use domains to catch an async exception
                                 // if the end user app does not have any middlewares reading request body,
                                 // applying filters will not have anywhere to propagate the error
@@ -102,7 +108,7 @@ export class HttpInstrumentationWrapper {
                                 // throwing an uncaught error that is bound within a domain allows us to achieve both:
                                 // cancel request without it propagating further through the app &
                                 // set the desired response
-                                if(Framework.getInstance().isPureExpress()){
+                                if (Framework.getInstance().isPureExpress()) {
                                     // @ts-ignore
                                     request.res.status(403)
                                     // @ts-ignore
@@ -125,13 +131,14 @@ export class HttpInstrumentationWrapper {
             }
         }
     }
+
     IncomingRequestHook = this.incomingRequestHook.bind(this)
 
-    outgoingRequestHook(request: RequestOptions) : AttrWrapper {
+    outgoingRequestHook(request: RequestOptions): AttrWrapper {
         let attrs = new AttrWrapper()
-        if(this.requestHeaderCaptureEnabled) {
+        if (this.requestHeaderCaptureEnabled) {
             let outgoingHeaders = request.headers
-            if(!outgoingHeaders){
+            if (!outgoingHeaders) {
                 return attrs
             }
             for (const key in outgoingHeaders) {
@@ -140,26 +147,28 @@ export class HttpInstrumentationWrapper {
         }
         return attrs
     }
+
     OutgoingRequestHook = this.outgoingRequestHook.bind(this)
 
 
     customAttrs(span: Span, request: ClientRequest | IncomingMessage, response: IncomingMessage | ServerResponse): void {
-        if(response instanceof ServerResponse && this.responseHeaderCaptureEnabled) {
+        if (response instanceof ServerResponse && this.responseHeaderCaptureEnabled) {
             let headers = (<ServerResponse>response).getHeaders()
-            for(const key in headers) {
+            for (const key in headers) {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>headers[key])
             }
         }
     }
+
     CustomAttrs = this.customAttrs.bind(this)
 
-    respHook(span: Span, response: IncomingMessage | ServerResponse){
-        if(response instanceof IncomingMessage) {
+    respHook(span: Span, response: IncomingMessage | ServerResponse) {
+        if (response instanceof IncomingMessage) {
             for (const [key, value] of Object.entries(response.headers)) {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
             let bodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture.body_max_size_bytes, 0);
-            const listener = (chunk : any) => {
+            const listener = (chunk: any) => {
                 bodyCapture.appendData(chunk);
             };
             response.on("data", listener);
@@ -171,6 +180,7 @@ export class HttpInstrumentationWrapper {
         }
 
     }
+
     RespHook = this.respHook.bind(this)
 
     private shouldCaptureBody(configField: boolean, headers: IncomingHttpHeaders | OutgoingHttpHeaders): boolean {
@@ -198,8 +208,8 @@ export class HttpInstrumentationWrapper {
 
     // We need to collect request data before sending span to Filter API
     private setIncomingRequestAttributes = (span: Span, request: IncomingMessage) => {
-        const { socket } = request;
-        const { localAddress, localPort, remoteAddress, remotePort } = socket;
+        const {socket} = request;
+        const {localAddress, localPort, remoteAddress, remotePort} = socket;
         const rpcMetadata = getRPCMetadata(context.active());
 
         const attributes: SpanAttributes = {
