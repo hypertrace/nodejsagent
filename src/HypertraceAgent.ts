@@ -36,14 +36,14 @@ const api = require("@opentelemetry/api");
 const {Resource} = require('@opentelemetry/resources');
 
 const {registerInstrumentations} = require('@opentelemetry/instrumentation');
-
+export const hypertraceDomain = require('domain').create();
 
 export class HypertraceAgent {
     _provider: NodeTracerProvider;
     public config: Config
     public exporter: SpanExporter | undefined
 
-    public constructor(overrideVersion?: string ) {
+    public constructor(overrideVersion?: string) {
         logger.info("Initializing Hypertrace Agent")
         logger.info(`Hypertrace Version: ${version}`)
         logger.info(`Node version: ${process.version}`)
@@ -53,7 +53,13 @@ export class HypertraceAgent {
     }
 
     instrument() {
-        if(!Config.getInstance().config.enabled) {
+        hypertraceDomain.on('error', (er) => {
+            // these should only be forbidden errors unless something is going wrong with our body capture
+            // in either case, we don't want those exceptions to bubble outside of the agent
+            logger.debug('Error caught within hypertrace domain')
+            logger.debug(`error ${er.stack}`)
+        })
+        if (!Config.getInstance().config.enabled) {
             logger.info('Hypertrace disabled - not instrumenting')
             return false
         }
@@ -113,7 +119,7 @@ export class HypertraceAgent {
             'telemetry.sdk.language': 'nodejs'
         }
         let extraConfigAttributes = Config.getInstance().config.resource_attributes
-        if(extraConfigAttributes) {
+        if (extraConfigAttributes) {
             Object.assign(resourceAttributes, extraConfigAttributes)
         }
         return new NodeTracerProvider({
