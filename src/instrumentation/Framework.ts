@@ -2,12 +2,12 @@ export class Framework {
     private static instance: Framework | undefined;
     public config: any
 
-    private frameworks : Map<string, boolean>
+    private frameworks: Map<string, boolean>
     static supportedFrameworks = ['express', 'koa', 'nestjs', 'sails']
 
     private constructor() {
         this.frameworks = new Map<string, boolean>()
-        for(let framework of Framework.supportedFrameworks) {
+        for (let framework of Framework.supportedFrameworks) {
             this.frameworks[framework] = this.available(framework)
         }
     }
@@ -27,7 +27,7 @@ export class Framework {
         return !(this.frameworks['sails'] || this.frameworks['nestjs'] || this.frameworks['koa']);
     }
 
-    available = (mod : string) => {
+    available = (mod: string) => {
         try {
             require.resolve(mod)
             return true

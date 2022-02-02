@@ -6,7 +6,7 @@ import {
     RequestOptions,
     ServerResponse
 } from "http";
-import {context, Span, SpanAttributes, trace} from "@opentelemetry/api";
+import {context, Span, SpanAttributes} from "@opentelemetry/api";
 import {hypertrace} from "../config/generated";
 import {AttrWrapper} from "./AttrWrapper";
 import {BodyCapture} from "./BodyCapture";
@@ -110,7 +110,7 @@ export class HttpInstrumentationWrapper {
                                 // set the desired response
                                 if (Framework.getInstance().isPureExpress()) {
                                     // @ts-ignore
-                                    request.res.status(403)
+                                    request.res.status(STATUS_CODE)
                                     // @ts-ignore
                                     request.res.end()
                                     // @ts-ignore
@@ -118,9 +118,9 @@ export class HttpInstrumentationWrapper {
                                     throw filterError()
                                 } else {
                                     // @ts-ignore
-                                    request.res.statusCode = 403
+                                    request.res.statusCode = STATUS_CODE
                                     // @ts-ignore
-                                    request.res.statusMessage = 'FORBIDDEN'
+                                    request.res.statusMessage = MESSAGE
                                     // @ts-ignore
                                     request.next(filterError())
                                 }
