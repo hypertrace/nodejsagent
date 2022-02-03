@@ -1,4 +1,5 @@
 // need to load patch first to load patch to support import and require
+
 require('./instrumentation/instrumentation-patch');
 
 import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
@@ -24,13 +25,12 @@ import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 import {logger} from "./Logging";
 import {version} from "./Version";
 import {OTLPTraceExporter} from "@opentelemetry/exporter-trace-otlp-grpc";
-import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
-import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
+import {GrpcJsHypertraceInstrumentation} from "./instrumentation/GrpcJsHypertraceInstrumentation";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
 import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
-
+import {Framework} from "./instrumentation/Framework";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -70,6 +70,13 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
+        if(Framework.getInstance().available('@grpc/grpc-js')) {
+            // we need to check for grpc a level up before trying to patch since we cant "require" in the
+            // specific class we need to instead it has to be imported,
+            // but imports cant occur within conditionals
+            const grpcWrapper = require('./instrumentation/wrapper/GrpcJsWrapper')
+            grpcWrapper.patchGrpc()
+        }
         registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
@@ -85,7 +92,7 @@ export class HypertraceAgent {
                     requestCallback: koaRequestCallback,
                     responseCallback: koaResponseCallback
                 }),
-                new GrpcInstrumentation(),
+                new GrpcJsHypertraceInstrumentation(),
                 new GraphQLInstrumentation(),
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),

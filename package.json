@@ -15,8 +15,8 @@
   "dependencies": {
     "@opentelemetry/api": "1.0.4",
     "@opentelemetry/core": "1.0.1",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.27.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "0.27.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.27.0",
     "@opentelemetry/exporter-zipkin": "1.0.1",
     "@opentelemetry/instrumentation-express": "0.26.0",
     "@opentelemetry/instrumentation-graphql": "^0.26.0",
@@ -27,8 +27,8 @@
     "@opentelemetry/instrumentation-mysql": "^0.26.0",
     "@opentelemetry/instrumentation-mysql2": "^0.26.0",
     "@opentelemetry/instrumentation-pg": "^0.26.0",
-    "@opentelemetry/sdk-trace-node": "1.0.1",
     "@opentelemetry/propagator-b3": "1.0.1",
+    "@opentelemetry/sdk-trace-node": "1.0.1",
     "import-in-the-middle": "^1.2.0",
     "loglevel": "^1.8.0",
     "loglevel-plugin-prefix": "^0.8.4",
@@ -42,6 +42,8 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.4.16",
+    "@grpc/grpc-js": "^1.5.4",
+    "@grpc/proto-loader": "^0.6.9",
     "@nestjs/common": "^8.2.0",
     "@nestjs/core": "^8.1.1",
     "@nestjs/platform-express": "^8.1.1",
