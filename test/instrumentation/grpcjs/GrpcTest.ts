@@ -19,7 +19,7 @@ const proto = (grpc.loadPackageDefinition(
 // @ts-ignore
 const client = new proto.NoteService('localhost:50051', grpc.credentials.createInsecure())
 
-describe('GRPC', () => {
+describe('Grpc JS Support', () => {
     before((done)=> {
         server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
             console.log('server listening')
