@@ -1,6 +1,7 @@
 import {FieldInfo, MysqlError} from "mysql";
 import {AgentForTest} from "./AgentForTest";
 import {expect} from "chai";
+import mysql from "mysql2";
 const agentTestWrapper = AgentForTest.getInstance();
 agentTestWrapper.instrument()
 
@@ -14,14 +15,17 @@ describe('Mysql2 test', async () => {
         agentTestWrapper.stop()
     })
     const mysql = require('mysql2');
+    let connection
 
-    // create the connection to database
-    const connection = await mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: 'testhypertrace',
-        database: 'hypertrace'
-    });
+    before(async () => {
+        // create the connection to database
+        connection = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            password: 'testhypertrace',
+            database: 'hypertrace'
+        });
+    })
 
     it('will capture a span for query', (done) => {
         connection.connect();
