@@ -8,7 +8,7 @@ agentTestWrapper.instrument()
 // Ensure that you run: cd test/externalServices && docker-compose up
 // before running this test
 
-describe('Mysql2 test', () => {
+describe('Mysql2 test', async () => {
 
     afterEach(() => {
         agentTestWrapper.stop()
@@ -16,7 +16,7 @@ describe('Mysql2 test', () => {
     const mysql = require('mysql2');
 
     // create the connection to database
-    const connection = mysql.createConnection({
+    const connection = await mysql.createConnection({
         host: 'localhost',
         user: 'root',
         password: 'testhypertrace',
