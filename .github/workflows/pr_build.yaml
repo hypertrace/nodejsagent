@@ -52,6 +52,9 @@ jobs:
         run: cd ./test/externalServices && docker-compose up -d
       - name: Wait for Docker
         run: sleep 100
+      - name: Check test containers state
+        run: docker ps -a
+
       - name: Install codecov
         run: npm install codecov -g
       - name: Run Tests With Coverage
