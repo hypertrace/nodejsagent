@@ -1,16 +1,5 @@
 #!/bin/bash
-export LAMBDA_LAYER_PKGS_DIR="/opt/python";
-
-# - Set Lambda Layer python packages in PYTHONPATH so `hypertrace-instrument`
-#   script can find them
-
-export PYTHONPATH="$LAMBDA_LAYER_PKGS_DIR:$PYTHONPATH";
-
-# - Set Lambda runtime python packages in PYTHONPATH so
-#   `hypertrace-instrument` script can find them during auto instrumentation
-#   and instrument them.
-
-export PYTHONPATH="$LAMBDA_RUNTIME_DIR:$PYTHONPATH";
+export NODE_OPTIONS="${NODE_OPTIONS} --require @hypertrace/nodejsagent"
 
 if [ -z ${HT_REPORTING_TRACE_REPORTING_TYPE} ]; then
     export HT_REPORTING_TRACE_REPORTING_TYPE=OTLP;
@@ -33,7 +22,4 @@ else
     export HT_RESOURCE_ATTRIBUTES="$HT_RESOURCE_ATTRIBUTES,$HT_RESOURCE_ATTRIBUTES";
 fi
 
-export ORIG_HANDLER=$_HANDLER;
-export _HANDLER="hypertrace_wrapper.lambda_handler";
-
-python3 $LAMBDA_LAYER_PKGS_DIR/bin/hypertrace-instrument "$@"
+exec "$@"
