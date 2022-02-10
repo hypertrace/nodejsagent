@@ -1,9 +1,7 @@
 import {AgentForTest} from "./AgentForTest";
 import {expect} from "chai";
-import {AwsLambdaInstrumentation} from "@opentelemetry/instrumentation-aws-lambda";
 import {LambdaRequestHook, LambdaResponseHook} from "../../lib/instrumentation/LambdaInstrumentationWrapper";
 const agentTestWrapper = AgentForTest.getInstance();
-agentTestWrapper.instrument()
 
 describe('Lambda test', () => {
     let event = {
@@ -47,6 +45,10 @@ describe('Lambda test', () => {
         },
         "body": JSON.stringify({"some_body_data": "response-data"})
     }
+
+    beforeEach(() => {
+        agentTestWrapper.stop()
+    })
 
     afterEach( ()=> {
         agentTestWrapper.stop()
