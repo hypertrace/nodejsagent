@@ -1,4 +1,5 @@
 // need to load patch first to load patch to support import and require
+
 require('./instrumentation/instrumentation-patch');
 
 import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
@@ -24,26 +25,25 @@ import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 import {logger} from "./Logging";
 import {version} from "./Version";
 import {OTLPTraceExporter} from "@opentelemetry/exporter-trace-otlp-grpc";
-import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
 import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
-import {GrpcInstrumentation} from "@opentelemetry/instrumentation-grpc";
+import {GrpcJsHypertraceInstrumentation} from "./instrumentation/GrpcJsHypertraceInstrumentation";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
 import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
-
+import {Framework} from "./instrumentation/Framework";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
 
 const {registerInstrumentations} = require('@opentelemetry/instrumentation');
-
+export const hypertraceDomain = require('domain').create();
 
 export class HypertraceAgent {
     _provider: NodeTracerProvider;
     public config: Config
     public exporter: SpanExporter | undefined
 
-    public constructor(overrideVersion?: string ) {
+    public constructor(overrideVersion?: string) {
         logger.info("Initializing Hypertrace Agent")
         logger.info(`Hypertrace Version: ${version}`)
         logger.info(`Node version: ${process.version}`)
@@ -53,7 +53,13 @@ export class HypertraceAgent {
     }
 
     instrument() {
-        if(!Config.getInstance().config.enabled) {
+        hypertraceDomain.on('error', (er) => {
+            // these should only be forbidden errors unless something is going wrong with our body capture
+            // in either case, we don't want those exceptions to bubble outside of the agent
+            logger.debug('Error caught within hypertrace domain')
+            logger.debug(`error ${er.stack}`)
+        })
+        if (!Config.getInstance().config.enabled) {
             logger.info('Hypertrace disabled - not instrumenting')
             return false
         }
@@ -64,6 +70,13 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
+        if(Framework.getInstance().available('@grpc/grpc-js')) {
+            // we need to check for grpc a level up before trying to patch since we cant "require" in the
+            // specific class we need to instead it has to be imported,
+            // but imports cant occur within conditionals
+            const grpcWrapper = require('./instrumentation/wrapper/GrpcJsWrapper')
+            grpcWrapper.patchGrpc()
+        }
         registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
@@ -79,7 +92,7 @@ export class HypertraceAgent {
                     requestCallback: koaRequestCallback,
                     responseCallback: koaResponseCallback
                 }),
-                new GrpcInstrumentation(),
+                new GrpcJsHypertraceInstrumentation(),
                 new GraphQLInstrumentation(),
                 new MySQLInstrumentation(),
                 new MySQL2Instrumentation(),
@@ -113,7 +126,7 @@ export class HypertraceAgent {
             'telemetry.sdk.language': 'nodejs'
         }
         let extraConfigAttributes = Config.getInstance().config.resource_attributes
-        if(extraConfigAttributes) {
+        if (extraConfigAttributes) {
             Object.assign(resourceAttributes, extraConfigAttributes)
         }
         return new NodeTracerProvider({
