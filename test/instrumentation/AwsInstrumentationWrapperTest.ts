@@ -2,7 +2,6 @@ import {AgentForTest} from "./AgentForTest";
 import {expect} from "chai";
 import {LambdaRequestHook, LambdaResponseHook} from "../../lib/instrumentation/LambdaInstrumentationWrapper";
 const agentTestWrapper = AgentForTest.getInstance();
-agentTestWrapper.instrument()
 
 describe('Lambda test', () => {
     let event = {
