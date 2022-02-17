@@ -2,6 +2,7 @@ import {AgentForTest} from "./AgentForTest";
 import {expect} from "chai";
 import {LambdaRequestHook, LambdaResponseHook} from "../../lib/instrumentation/LambdaInstrumentationWrapper";
 const agentTestWrapper = AgentForTest.getInstance();
+agentTestWrapper.instrument()
 
 describe('Lambda test', () => {
     let event = {
@@ -55,7 +56,7 @@ describe('Lambda test', () => {
     })
 
 
-    it('can capture request data from api gateway event', () => {
+    it('can capture request data from api gateway event', (done) => {
         agentTestWrapper._provider.getTracer("@hypertrace/nodejsagent").startActiveSpan("lambda-span", (span) => {
             LambdaRequestHook(span, {event, context})
             span.end()
@@ -71,10 +72,11 @@ describe('Lambda test', () => {
             expect(lambdaSpan.attributes['http.request.body']).to.equal('{\n' +
                 '\t"req-body": "some-data"\n' +
                 '}')
+            done()
         })
     })
 
-    it('can capture response data from returned lambda map', () => {
+    it('can capture response data from returned lambda map', (done) => {
         agentTestWrapper._provider.getTracer("@hypertrace/nodejsagent").startActiveSpan("lambda-span", (span) => {
             LambdaResponseHook(span, {err: undefined, res: response})
             span.end()
@@ -85,6 +87,7 @@ describe('Lambda test', () => {
             expect(lambdaSpan.attributes['http.response.header.a-header']).to.equal('some_VALUE')
             expect(lambdaSpan.attributes['http.response.header.content-type']).to.equal('application/json')
             expect(lambdaSpan.attributes['http.response.body']).to.equal('{"some_body_data":"response-data"}')
+            done()
         })
     })
 })
