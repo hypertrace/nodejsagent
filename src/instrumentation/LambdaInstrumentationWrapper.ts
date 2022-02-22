@@ -13,10 +13,9 @@ export function LambdaRequestHook(span, {event, context}){
     if(lambdaRequestContext['http']) {
         let httpContext = lambdaRequestContext['http']
         span.setAttribute(SemanticAttributes.HTTP_METHOD, httpContext['method'])
-        span.setAttribute(SemanticAttributes.HTTP_SCHEME, httpContext['protocol'])
-        span.setAttribute(SemanticAttributes.HTTP_URL, httpContext['path'])
+        span.setAttribute(SemanticAttributes.HTTP_SCHEME, headers['x-forwarded-proto'])
         span.setAttribute(SemanticAttributes.HTTP_TARGET, httpContext['path'])
-        span.setAttribute(SemanticAttributes.HTTP_HOST, httpContext['host'])
+        span.setAttribute(SemanticAttributes.HTTP_HOST, headers['host'])
     }
     // req header capture
     if(<boolean>Config.getInstance().config.data_capture!.http_headers!.request!) {
