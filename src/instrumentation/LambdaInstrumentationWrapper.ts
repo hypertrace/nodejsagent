@@ -17,6 +17,12 @@ export function LambdaRequestHook(span, {event, context}){
         span.setAttribute(SemanticAttributes.HTTP_TARGET, httpContext['path'])
         span.setAttribute(SemanticAttributes.HTTP_HOST, headers['host'])
     }
+
+    let cookies = event['cookies']
+    if(cookies) {
+        span.setAttribute('http.request.header.cookie', cookies.join(';'))
+    }
+
     // req header capture
     if(<boolean>Config.getInstance().config.data_capture!.http_headers!.request!) {
         for (const key in headers) {

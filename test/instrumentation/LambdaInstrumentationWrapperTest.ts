@@ -17,6 +17,7 @@ describe('Lambda test', () => {
             'x-forwarded-port': '443',
             'x-forwarded-proto': 'https'
         },
+        cookies: ['a=b','foo=bar'],
         requestContext: {
             accountId: '286278240186',
             apiId: 'slmfg8swx6',
@@ -70,6 +71,7 @@ describe('Lambda test', () => {
         expect(lambdaSpan.attributes['http.target']).to.equal('/default/nodejs-test')
         expect(lambdaSpan.attributes['http.request.header.content-type']).to.equal('application/json')
         expect(lambdaSpan.attributes['http.request.header.user-agent']).to.equal('insomnia/2021.7.2')
+        expect(lambdaSpan.attributes['http.request.header.cookie']).to.equal('a=b;foo=bar')
         expect(lambdaSpan.attributes['http.request.body']).to.equal('{\n' +
             '\t"req-body": "some-data"\n' +
             '}')
