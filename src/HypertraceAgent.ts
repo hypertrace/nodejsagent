@@ -1,7 +1,7 @@
 // need to load patch first to load patch to support import and require
-
 require('./instrumentation/instrumentation-patch');
 
+import {AwsLambdaInstrumentation} from "@opentelemetry/instrumentation-aws-lambda";
 import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/sdk-trace-base';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
@@ -31,6 +31,7 @@ import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapp
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
 import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
 import {Framework} from "./instrumentation/Framework";
+import {LambdaRequestHook, LambdaResponseHook} from "./instrumentation/LambdaInstrumentationWrapper";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -66,7 +67,6 @@ export class HypertraceAgent {
         logger.info('Hypertrace enabled - instrumenting')
         this.setup()
         let httpWrapper = new HttpInstrumentationWrapper(this.config.config)
-
         patchClientRequest()
         patchExpress()
         patchSails()
@@ -80,6 +80,11 @@ export class HypertraceAgent {
         registerInstrumentations({
             tracerProvider: this._provider,
             instrumentations: [
+                new AwsLambdaInstrumentation({
+                    requestHook: LambdaRequestHook,
+                    responseHook: LambdaResponseHook,
+                    disableAwsContextPropagation: true
+                }),
                 new HttpHypertraceInstrumentation({
                     requestHook: httpWrapper.IncomingRequestHook,
                     startOutgoingSpanHook: httpWrapper.OutgoingRequestHook,
