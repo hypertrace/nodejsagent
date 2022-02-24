@@ -47,7 +47,7 @@ export class AgentForTest extends HypertraceAgent {
     }
 
     stop() {
-        (<InMemorySpanExporter>this.exporter!).reset()
+        (<InMemorySpanExporter>this.exporter!)?.reset()
         Config.reset()
         Config.getInstance()
     }
