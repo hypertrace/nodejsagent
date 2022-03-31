@@ -178,6 +178,7 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute("http.response.body", bodyString);
             });
         }
+
     }
 
     RespHook = this.respHook.bind(this)
