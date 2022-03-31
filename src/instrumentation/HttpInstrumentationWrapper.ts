@@ -178,6 +178,18 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute("http.response.body", bodyString);
             });
         }
+        if (response instanceof ServerResponse) {
+            let bodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture.body_max_size_bytes, 0);
+            const listener = (chunk: any) => {
+                bodyCapture.appendData(chunk);
+            };
+            response.on("data", listener);
+            response.once("end", () => {
+                response.removeListener('data', listener);
+                let bodyString = bodyCapture.dataString();
+                span.setAttribute("http.response.body", bodyString);
+            });
+        }
 
     }
 

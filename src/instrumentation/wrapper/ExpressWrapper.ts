@@ -24,14 +24,14 @@ export function ResponseEnded(span, response, responseEndArgs) {
             // @ts-ignore
             if (span.inHtCaptureScope != true) {
                 // @ts-ignore
-                let headerContentType = response.get('Content-Type')
+                let headerContentType = response.getHeader('Content-Type')
                 if (HttpInstrumentationWrapper.isRecordableContentType(headerContentType)) {
                     // @ts-ignore
                     let bodyCapture: BodyCapture = span.hypertraceBodyCapture || new BodyCapture(Config.getInstance().config.data_capture.body_max_size_bytes,
                         Config.getInstance().config.data_capture.body_max_processing_size_bytes)
                     // the response may have been chunked during send & nested end call;
                     // if so & content lengths are the same, we already captured entire body
-                    if (response.get('Content-Length') == bodyCapture.getContentLength().toString()) {
+                    if (response.getHeader('Content-Length') == bodyCapture.getContentLength().toString()) {
                         return
                     }
                     bodyCapture.appendData(responseEndArgs[0])
