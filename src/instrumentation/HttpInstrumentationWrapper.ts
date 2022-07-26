@@ -75,20 +75,21 @@ export class HttpInstrumentationWrapper {
             let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!,
                 <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!)
             if (this.shouldCaptureBody(<boolean>Config.getInstance().config.data_capture!.http_body!.request!, headers)) {
-                const listener = (chunk: any) => {
-                    bodyCapture.appendData(chunk)
-                }
-                request.on("data", listener);
+                if (request.hasOwnProperty("res")) { // this means we are in a express based app
+                    const listener = (chunk: any) => {
+                        bodyCapture.appendData(chunk)
+                    }
+                    request.on("data", listener);
 
 
-                request.once("end", () => {
-                    hypertraceDomain.run(function () {
+                    request.once("end", () => {
+                        hypertraceDomain.run(function () {
 
-                        request.removeListener('data', listener)
-                        let bodyString = bodyCapture.dataString()
-                        span.setAttribute('http.request.body', bodyString)
-                        // @ts-ignore
-                        if (request.res) { // this means we are in a express based app
+                            request.removeListener('data', listener)
+                            let bodyString = bodyCapture.dataString()
+                            span.setAttribute('http.request.body', bodyString)
+                            // @ts-ignore
+
                             let filterResult = Registry.getInstance().applyFilters(span!,
                                 request.url,
                                 headers,
@@ -125,9 +126,9 @@ export class HttpInstrumentationWrapper {
                                     request.next(filterError())
                                 }
                             }
-                        }
-                    })
-                });
+                        })
+                    });
+                }
             }
         }
     }

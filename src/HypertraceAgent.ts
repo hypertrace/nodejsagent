@@ -27,6 +27,7 @@ import {version} from "./Version";
 import {OTLPTraceExporter} from "@opentelemetry/exporter-trace-otlp-grpc";
 import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
 import {GrpcJsHypertraceInstrumentation} from "./instrumentation/GrpcJsHypertraceInstrumentation";
+import {HapiHypertraceInstrumentation} from "./instrumentation/HapiHypertraceInstrumentation";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
 import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
@@ -91,6 +92,7 @@ export class HypertraceAgent {
                     applyCustomAttributesOnSpan: httpWrapper.CustomAttrs,
                     responseHook: httpWrapper.RespHook
                 }),
+                new HapiHypertraceInstrumentation({}),
                 new ExpressInstrumentation({ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]}),
                 new KoaHypertraceInstrumentation({
                     ignoreLayersType: [KoaLayerType.MIDDLEWARE],
