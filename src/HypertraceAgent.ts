@@ -1,4 +1,6 @@
 // need to load patch first to load patch to support import and require
+import {isCompatible} from "./instrumentation/InstrumentationCompat";
+
 require('./instrumentation/instrumentation-patch');
 
 import {AwsLambdaInstrumentation} from "@opentelemetry/instrumentation-aws-lambda";
@@ -27,7 +29,6 @@ import {version} from "./Version";
 import {OTLPTraceExporter} from "@opentelemetry/exporter-trace-otlp-grpc";
 import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
 import {GrpcJsHypertraceInstrumentation} from "./instrumentation/GrpcJsHypertraceInstrumentation";
-import {HapiHypertraceInstrumentation} from "./instrumentation/HapiHypertraceInstrumentation";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
 import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
@@ -78,35 +79,44 @@ export class HypertraceAgent {
             const grpcWrapper = require('./instrumentation/wrapper/GrpcJsWrapper')
             grpcWrapper.patchGrpc()
         }
+
+        let instrumentations = [
+            new AwsLambdaInstrumentation({
+                requestHook: LambdaRequestHook,
+                responseHook: LambdaResponseHook,
+                disableAwsContextPropagation: true
+            }),
+            new HttpHypertraceInstrumentation({
+                requestHook: httpWrapper.IncomingRequestHook,
+                startOutgoingSpanHook: httpWrapper.OutgoingRequestHook,
+                applyCustomAttributesOnSpan: httpWrapper.CustomAttrs,
+                responseHook: httpWrapper.RespHook
+            }),
+            new ExpressInstrumentation({ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]}),
+            new KoaHypertraceInstrumentation({
+                ignoreLayersType: [KoaLayerType.MIDDLEWARE],
+                requestCallback: koaRequestCallback,
+                responseCallback: koaResponseCallback
+            }),
+            new GrpcJsHypertraceInstrumentation(),
+            new GraphQLInstrumentation(),
+            new MySQLInstrumentation(),
+            new MySQL2Instrumentation(),
+            new PgInstrumentation(),
+            new MongoDBInstrumentation(),
+            new MongooseInstrumentation()
+        ]
+
+        if(isCompatible("12.0.0")){
+            // Imports are only allowed at top level
+            // so instead we need to require it if the node version is modern enough
+            const hapiHypertraceInstrumentation = require("./instrumentation/HapiHypertraceInstrumentation")
+            instrumentations.push(new hapiHypertraceInstrumentation.HapiHypertraceInstrumentation({}),)
+        }
+
         registerInstrumentations({
             tracerProvider: this._provider,
-            instrumentations: [
-                new AwsLambdaInstrumentation({
-                    requestHook: LambdaRequestHook,
-                    responseHook: LambdaResponseHook,
-                    disableAwsContextPropagation: true
-                }),
-                new HttpHypertraceInstrumentation({
-                    requestHook: httpWrapper.IncomingRequestHook,
-                    startOutgoingSpanHook: httpWrapper.OutgoingRequestHook,
-                    applyCustomAttributesOnSpan: httpWrapper.CustomAttrs,
-                    responseHook: httpWrapper.RespHook
-                }),
-                new HapiHypertraceInstrumentation({}),
-                new ExpressInstrumentation({ignoreLayersType: [ExpressLayerType.MIDDLEWARE, ExpressLayerType.REQUEST_HANDLER]}),
-                new KoaHypertraceInstrumentation({
-                    ignoreLayersType: [KoaLayerType.MIDDLEWARE],
-                    requestCallback: koaRequestCallback,
-                    responseCallback: koaResponseCallback
-                }),
-                new GrpcJsHypertraceInstrumentation(),
-                new GraphQLInstrumentation(),
-                new MySQLInstrumentation(),
-                new MySQL2Instrumentation(),
-                new PgInstrumentation(),
-                new MongoDBInstrumentation(),
-                new MongooseInstrumentation()
-            ]
+            instrumentations: instrumentations
         });
         // if using express under es6 syntax http/https loading isnt captured
         // this ensures they are loaded immediately following instrumentation init
