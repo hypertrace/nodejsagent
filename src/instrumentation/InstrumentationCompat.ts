@@ -5,7 +5,7 @@ const [processMajor, processMinor, processPatch] = m.slice(1).map(_ => parseInt(
 export function isCompatible(minVersion){
     try {
         // @ts-ignore
-        const minMajor, minor, patch = parseCurrentVersions(minVersion)
+        const [minMajor, minMinor, minPatch] = parseCurrentVersions(minVersion)
         return minMajor > processMajor
     } catch {
         return false
