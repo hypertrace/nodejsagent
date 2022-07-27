@@ -75,7 +75,7 @@ export class HttpInstrumentationWrapper {
             let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!,
                 <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!)
             if (this.shouldCaptureBody(<boolean>Config.getInstance().config.data_capture!.http_body!.request!, headers)) {
-                if (request.hasOwnProperty("res")) { // this means we are in a express based app
+                if (request.hasOwnProperty("res") || Framework.getInstance().isExpressBased()) { // this means we are in a express based app
                     const listener = (chunk: any) => {
                         bodyCapture.appendData(chunk)
                     }

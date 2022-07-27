@@ -8,6 +8,7 @@ import {httpRequest} from "./HttpRequest";
 import {Config} from "../../src/config/config";
 import {Registry} from "../../src/filter/Registry";
 import {SampleFilter} from "./SampleFilter";
+import {Framework} from "../../src/instrumentation/Framework";
 
 describe('Koa tests', () => {
     const Koa = require('koa');
@@ -27,7 +28,11 @@ describe('Koa tests', () => {
 
     app.use(router.routes()).use(router.allowedMethods());
     let server : any;
+    // We need to do this since all our tests run in the same process
+    // otherwise even though we are testing koa, express is still present in the node_modules
+    let original = Framework.getInstance().isExpressBased
     before(()=> {
+        Framework.getInstance().isExpressBased = () => {return false}
         server = app.listen(8000)
     })
 
@@ -36,6 +41,7 @@ describe('Koa tests', () => {
     })
 
     after(()=> {
+        Framework.getInstance().isExpressBased = original
         server.close()
     })
 

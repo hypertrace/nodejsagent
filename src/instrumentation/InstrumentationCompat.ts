@@ -14,7 +14,7 @@ export function isCompatible(minVersion){
 }
 
 function parseCurrentVersions(minVersion){
-    const m = process.version.match(/(\d+)\.(\d+)\.(\d+)/);
+    const m = minVersion.match(/(\d+)\.(\d+)\.(\d+)/);
     // @ts-ignore
     return m.slice(1).map(_ => parseInt(_));
 }

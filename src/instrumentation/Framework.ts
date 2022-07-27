@@ -27,6 +27,10 @@ export class Framework {
         return !(this.frameworks['sails'] || this.frameworks['nestjs'] || this.frameworks['koa'] || this.frameworks['hapi']);
     }
 
+    public isExpressBased = () => {
+        return (this.frameworks['sails'] || this.frameworks['nestjs'])
+    }
+
     available = (mod: string) => {
         try {
             require.resolve(mod)
