@@ -32,7 +32,7 @@ export function captureWithFilter(span, request) {
 }
 
 function createHapiUrl(request){
-    return ``
+    return `${request.url}`
 }
 
 export function captureResponse(span, hapiToolkit, response) {
