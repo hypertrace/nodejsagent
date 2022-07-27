@@ -11,9 +11,8 @@ import {IFilter} from "../../src/filter/Filter";
 import {Span} from "@opentelemetry/api";
 import {REQUEST_TYPE} from "../../lib/filter/Filter";
 import {isCompatible} from "../../lib/instrumentation/InstrumentationCompat";
-import Hapi from "@hapi/hapi";
 
-if(isCompatible("12.0.0")){
+if(isCompatible("12.0.0") === true){
     const Hapi = require('@hapi/hapi');
 
     describe('Hapi tests', () => {

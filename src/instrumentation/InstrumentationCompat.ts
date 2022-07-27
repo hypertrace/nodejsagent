@@ -6,7 +6,7 @@ export function isCompatible(minVersion){
     try {
         // @ts-ignore
         const [minMajor, minMinor, minPatch] = parseCurrentVersions(minVersion)
-        return minMajor > processMajor
+        return processMajor >= minMajor
     } catch {
         return false
     }
