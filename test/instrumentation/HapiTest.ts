@@ -11,6 +11,7 @@ import {IFilter} from "../../src/filter/Filter";
 import {Span} from "@opentelemetry/api";
 import {REQUEST_TYPE} from "../../lib/filter/Filter";
 import {isCompatible} from "../../lib/instrumentation/InstrumentationCompat";
+import {Framework} from "../../src/instrumentation/Framework";
 
 if(isCompatible("12.0.0") === true){
     const Hapi = require('@hapi/hapi');
@@ -46,7 +47,9 @@ if(isCompatible("12.0.0") === true){
             }
         });
 
+        let original = Framework.getInstance().isExpressBased
         before(async ()=> {
+            Framework.getInstance().isExpressBased = () => {return false}
             await server.start();
         })
 
@@ -55,6 +58,7 @@ if(isCompatible("12.0.0") === true){
         })
 
         after( ()=> {
+            Framework.getInstance().isExpressBased = original
             server.stop()
             agentTestWrapper.stop()
         })
