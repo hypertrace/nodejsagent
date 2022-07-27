@@ -1,12 +1,20 @@
 const m = process.version.match(/(\d+)\.(\d+)\.(\d+)/);
+// @ts-ignore
 const [processMajor, processMinor, processPatch] = m.slice(1).map(_ => parseInt(_));
 
 export function isCompatible(minVersion){
-    const minMajor, _minor, _patch = parseCurrentVersions(minVersion)
-    return minMajor > processMajor
+    try {
+        // @ts-ignore
+        const minMajor, minor, patch = parseCurrentVersions(minVersion)
+        return minMajor > processMajor
+    } catch {
+        return false
+    }
+
 }
 
 function parseCurrentVersions(minVersion){
     const m = process.version.match(/(\d+)\.(\d+)\.(\d+)/);
+    // @ts-ignore
     return m.slice(1).map(_ => parseInt(_));
 }
