@@ -17,7 +17,11 @@ export function available(mod: string) {
 }
 
 export function ResponseEnded(span, response, responseEndArgs) {
-    try { // this call happens within a SafeExecuteInTheMiddle;
+    try {
+        if(!responseEndArgs || !responseEndArgs[0]){
+            return
+        }
+        // this call happens within a SafeExecuteInTheMiddle;
         // a raised exception will prevent the original resp.apply.end from being applied
         // which would cause some of the response not to write to client
         if (span) {
