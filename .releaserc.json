@@ -11,7 +11,7 @@
       "releaseRules": [
         {"breaking": true, "release": "major"},
         {"type": "feat", "release": "minor"},
-        {"type": "*", "release": "patch"},
+        {"type": null, "release": "patch"},
         {"type": null, "release": "patch"}
       ]
     }],
