@@ -47,9 +47,13 @@ if(isCompatible("12.0.0") === true){
             }
         });
 
-        let original = Framework.getInstance().isExpressBased
+        let expressBased = Framework.getInstance().isExpressBased
+        let onlyExpress = Framework.getInstance().isPureExpress
+        let noFrameworks = Framework.getInstance().noFrameworks
         before(async ()=> {
             Framework.getInstance().isExpressBased = () => {return false}
+            Framework.getInstance().isPureExpress =  () => {return false}
+            Framework.getInstance().noFrameworks = () => {return false}
             await server.start();
         })
 
@@ -58,7 +62,9 @@ if(isCompatible("12.0.0") === true){
         })
 
         after( ()=> {
-            Framework.getInstance().isExpressBased = original
+            Framework.getInstance().isExpressBased = expressBased
+            Framework.getInstance().isPureExpress = onlyExpress
+            Framework.getInstance().isPureExpress = noFrameworks
             server.stop()
             agentTestWrapper.stop()
         })

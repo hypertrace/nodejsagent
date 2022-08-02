@@ -5,6 +5,7 @@ agentTestWrapper.instrument()
 import {expect} from "chai";
 import * as http from "http";
 import {httpRequest} from "./HttpRequest";
+import {Framework} from "../../src/instrumentation/Framework";
 
 describe('Agent tests', () => {
     const requestListener = function (req, res) {
@@ -25,8 +26,13 @@ describe('Agent tests', () => {
     }
 
     let server = http.createServer(requestListener)
-
+    let originalIncludeExpress = Framework.getInstance().isExpressBased
+    let originalOnlyExpress = Framework.getInstance().isExpressBased
+    let originalNoFrameworks = Framework.getInstance().noFrameworks
     before((done)=> {
+        Framework.getInstance().isExpressBased = () => {return false}
+        Framework.getInstance().isPureExpress = () => {return false}
+        Framework.getInstance().noFrameworks = () => {return true}
         server.listen(8000)
         server.on('listening', () => {done()})
     })
@@ -36,6 +42,9 @@ describe('Agent tests', () => {
     })
 
     after( ()=> {
+        Framework.getInstance().isExpressBased = originalIncludeExpress
+        Framework.getInstance().isPureExpress = originalOnlyExpress
+        Framework.getInstance().noFrameworks = originalNoFrameworks
         server.close()
         agentTestWrapper.stop()
     })
