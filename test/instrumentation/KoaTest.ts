@@ -30,9 +30,13 @@ describe('Koa tests', () => {
     let server : any;
     // We need to do this since all our tests run in the same process
     // otherwise even though we are testing koa, express is still present in the node_modules
-    let original = Framework.getInstance().isExpressBased
+    let expressBased = Framework.getInstance().isExpressBased
+    let onlyExpress = Framework.getInstance().isPureExpress
+    let noFrameworks = Framework.getInstance().noFrameworks
     before(()=> {
         Framework.getInstance().isExpressBased = () => {return false}
+        Framework.getInstance().isPureExpress =  () => {return false}
+        Framework.getInstance().noFrameworks = () => {return false}
         server = app.listen(8000)
     })
 
@@ -41,7 +45,9 @@ describe('Koa tests', () => {
     })
 
     after(()=> {
-        Framework.getInstance().isExpressBased = original
+        Framework.getInstance().isExpressBased = expressBased
+        Framework.getInstance().isPureExpress = onlyExpress
+        Framework.getInstance().isPureExpress = noFrameworks
         server.close()
     })
 

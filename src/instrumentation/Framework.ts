@@ -31,6 +31,10 @@ export class Framework {
         return (this.frameworks['sails'] || this.frameworks['nestjs'])
     }
 
+    public noFrameworks = () => {
+        return(this.frameworks['sails'] || this.frameworks['nestjs'] || this.frameworks['koa'] || this.frameworks['hapi'] || this.frameworks['express'])
+    }
+
     available = (mod: string) => {
         try {
             require.resolve(mod)
