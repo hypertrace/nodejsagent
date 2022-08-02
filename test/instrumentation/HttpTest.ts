@@ -33,7 +33,6 @@ describe('Agent tests', () => {
         Framework.getInstance().isExpressBased = () => {return false}
         Framework.getInstance().isPureExpress = () => {return false}
         Framework.getInstance().noFrameworks = () => {return true}
-
         server.listen(8000)
         server.on('listening', () => {done()})
     })
