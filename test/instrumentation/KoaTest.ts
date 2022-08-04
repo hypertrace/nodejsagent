@@ -47,7 +47,7 @@ describe('Koa tests', () => {
     after(()=> {
         Framework.getInstance().isExpressBased = expressBased
         Framework.getInstance().isPureExpress = onlyExpress
-        Framework.getInstance().isPureExpress = anyFrameworks
+        Framework.getInstance().anyFrameworks = anyFrameworks
         server.close()
     })
 

@@ -64,7 +64,7 @@ if(isCompatible("12.0.0") === true){
         after( ()=> {
             Framework.getInstance().isExpressBased = expressBased
             Framework.getInstance().isPureExpress = onlyExpress
-            Framework.getInstance().isPureExpress = anyFrameworks
+            Framework.getInstance().anyFrameworks = anyFrameworks
             server.stop()
             agentTestWrapper.stop()
         })
