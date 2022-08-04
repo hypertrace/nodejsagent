@@ -34,6 +34,7 @@ import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceIns
 import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
 import {Framework} from "./instrumentation/Framework";
 import {LambdaRequestHook, LambdaResponseHook} from "./instrumentation/LambdaInstrumentationWrapper";
+import {patchHapi} from "./instrumentation/wrapper/HapiWrapper";
 const api = require("@opentelemetry/api");
 
 const {Resource} = require('@opentelemetry/resources');
@@ -110,6 +111,7 @@ export class HypertraceAgent {
         if(isCompatible("12.0.0")){
             // Imports are only allowed at top level
             // so instead we need to require it if the node version is modern enough
+            patchHapi()
             const hapiHypertraceInstrumentation = require("./instrumentation/HapiHypertraceInstrumentation")
             instrumentations.push(new hapiHypertraceInstrumentation.HapiHypertraceInstrumentation({}),)
         }

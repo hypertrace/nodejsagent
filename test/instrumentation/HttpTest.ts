@@ -28,11 +28,11 @@ describe('Agent tests', () => {
     let server = http.createServer(requestListener)
     let originalIncludeExpress = Framework.getInstance().isExpressBased
     let originalOnlyExpress = Framework.getInstance().isExpressBased
-    let originalNoFrameworks = Framework.getInstance().noFrameworks
+    let originalanyFrameworks = Framework.getInstance().anyFrameworks
     before((done)=> {
         Framework.getInstance().isExpressBased = () => {return false}
         Framework.getInstance().isPureExpress = () => {return false}
-        Framework.getInstance().noFrameworks = () => {return true}
+        Framework.getInstance().anyFrameworks = () => {return false}
         server.listen(8000)
         server.on('listening', () => {done()})
     })
@@ -44,7 +44,7 @@ describe('Agent tests', () => {
     after( ()=> {
         Framework.getInstance().isExpressBased = originalIncludeExpress
         Framework.getInstance().isPureExpress = originalOnlyExpress
-        Framework.getInstance().noFrameworks = originalNoFrameworks
+        Framework.getInstance().anyFrameworks = originalanyFrameworks
         server.close()
         agentTestWrapper.stop()
     })

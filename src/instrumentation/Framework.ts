@@ -3,7 +3,7 @@ export class Framework {
     public config: any
 
     private frameworks: Map<string, boolean>
-    static supportedFrameworks = ['express', 'koa', 'nestjs', 'sails', 'hapi']
+    static supportedFrameworks = ['express', 'koa', '@nestjs/core', 'sails', '@hapi/hapi']
 
     private constructor() {
         this.frameworks = new Map<string, boolean>()
@@ -24,11 +24,15 @@ export class Framework {
     // we can pass filter error up middleware chain cleanly from event based body read
     // if it is purely express, we need to end response immediately
     public isPureExpress = () => {
-        return !(this.frameworks['sails'] || this.frameworks['nestjs'] || this.frameworks['koa'] || this.frameworks['hapi']);
+        return !(this.frameworks['sails'] || this.frameworks['@nestjs/core'] || this.frameworks['koa'] || this.frameworks['@hapi/hapi']);
     }
 
     public isExpressBased = () => {
-        return (this.frameworks['sails'] || this.frameworks['nestjs'])
+        return (this.frameworks['sails'] || this.frameworks['@nestjs/core'])
+    }
+
+    public anyFrameworks = () => {
+        return(this.frameworks['sails'] || this.frameworks['@nestjs/core'] || this.frameworks['koa'] || this.frameworks['@hapi/hapi'] || this.frameworks['express'])
     }
 
     public noFrameworks = () => {
