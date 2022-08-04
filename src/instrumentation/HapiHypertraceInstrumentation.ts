@@ -45,7 +45,7 @@ import {
     isPatchableExtMethod,
     getRootSpanMetadata,
 } from '@opentelemetry/instrumentation-hapi/build/src/utils';
-import {captureResponse, captureWithFilter} from "./wrapper/HapiBodyCapture";
+import {captureWithFilter} from "./wrapper/HapiBodyCapture";
 
 /** Hapi instrumentation for OpenTelemetry */
 export class HapiHypertraceInstrumentation extends InstrumentationBase {
@@ -415,9 +415,7 @@ export class HapiHypertraceInstrumentation extends InstrumentationBase {
                     attributes: metadata.attributes,
                 });
                 try {
-                    let r =  await oldHandler(request, h, err);
-                    captureResponse(hapiSpan, h, r)
-                    return r
+                    return await oldHandler(request, h, err);
                 } catch (err) {
                     span.recordException(err);
                     span.setStatus({

@@ -49,11 +49,11 @@ if(isCompatible("12.0.0") === true){
 
         let expressBased = Framework.getInstance().isExpressBased
         let onlyExpress = Framework.getInstance().isPureExpress
-        let noFrameworks = Framework.getInstance().noFrameworks
+        let anyFrameworks = Framework.getInstance().anyFrameworks
         before(async ()=> {
             Framework.getInstance().isExpressBased = () => {return false}
             Framework.getInstance().isPureExpress =  () => {return false}
-            Framework.getInstance().noFrameworks = () => {return false}
+            Framework.getInstance().anyFrameworks = () => {return true}
             await server.start();
         })
 
@@ -64,7 +64,7 @@ if(isCompatible("12.0.0") === true){
         after( ()=> {
             Framework.getInstance().isExpressBased = expressBased
             Framework.getInstance().isPureExpress = onlyExpress
-            Framework.getInstance().isPureExpress = noFrameworks
+            Framework.getInstance().isPureExpress = anyFrameworks
             server.stop()
             agentTestWrapper.stop()
         })
