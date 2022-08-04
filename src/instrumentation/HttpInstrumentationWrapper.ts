@@ -75,7 +75,7 @@ export class HttpInstrumentationWrapper {
             let bodyCapture: BodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture!.body_max_size_bytes!,
                 <number>Config.getInstance().config.data_capture!.body_max_processing_size_bytes!)
             if (this.shouldCaptureBody(<boolean>Config.getInstance().config.data_capture!.http_body!.request!, headers)) {
-                if (Framework.getInstance().noFrameworks() || Framework.getInstance().isExpressBased() || Framework.getInstance().isPureExpress()) {
+                if (!Framework.getInstance().anyFrameworks() || Framework.getInstance().isExpressBased() || Framework.getInstance().isPureExpress()) {
                     const listener = (chunk: any) => {
                         bodyCapture.appendData(chunk)
                     }
@@ -196,7 +196,7 @@ export class HttpInstrumentationWrapper {
     }
 
     public static isRecordableContentType(contentType?: string): boolean {
-        if (contentType === undefined) {
+        if (contentType === undefined || contentType === null) {
             return false
         }
         for (let recordableType of _RECORDABLE_CONTENT_TYPES) {
