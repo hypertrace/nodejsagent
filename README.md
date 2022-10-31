@@ -48,7 +48,7 @@ _Note: Using npm link doesnt solve the local testing problem as it will use the 
     1. Start external services
         ```
         cd ./test/externalServices
-        docker-compuse up -d
+        docker-compose up -d
         cd -
         ```
     1. 
@@ -58,7 +58,7 @@ _Note: Using npm link doesnt solve the local testing problem as it will use the 
     1. Stop external services if not needed.
         ```
         cd ./test/externalServices
-        docker-compuse down
+        docker-compose down
         cd -
         ```
 
