@@ -33,10 +33,15 @@ export class HttpInstrumentationWrapper {
     constructor(config: AgentConfig) {
         this.agentConfig = config
         let dataCapture = this.agentConfig!.data_capture
+        // @ts-ignore
         this.requestHeaderCaptureEnabled = <boolean>dataCapture!.http_headers!.request
+        // @ts-ignore
         this.responseHeaderCaptureEnabled = <boolean>dataCapture!.http_headers!.response
+        // @ts-ignore
         this.requestBodyCaptureEnabled = <boolean>dataCapture!.http_body!.request
+        // @ts-ignore
         this.responseBodyCaptureEnabled = <boolean>dataCapture!.http_body!.response
+        // @ts-ignore
         this.maxBodySizeBytes = <number>dataCapture!.body_max_size_bytes!
     }
 
