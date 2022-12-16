@@ -5,7 +5,82 @@ const agentTestWrapper = AgentForTest.getInstance();
 agentTestWrapper.instrument()
 
 describe('Lambda test', () => {
-    let event = {
+    let apiGatewayEventV1 = {
+        "version": "1.0",
+        "resource": "/my/path",
+        "path": "/my/path",
+        "httpMethod": "PUT",
+        "headers": {
+            "header1": "value1",
+            "header2": "value2",
+            'x-forwarded-proto': 'https',
+            'content-type': 'application/json',
+        },
+        "queryStringParameters": {
+            "parameter1": "value1",
+            "parameter2": "value"
+        },
+        "multiValueQueryStringParameters": {
+            "parameter1": [
+                "value1",
+                "value2"
+            ],
+            "parameter2": [
+                "value"
+            ]
+        },
+        "requestContext": {
+            "accountId": "123456789012",
+            "apiId": "id",
+            "authorizer": {
+                "claims": null,
+                "scopes": null
+            },
+            "domainName": "id.execute-api.us-east-1.amazonaws.com",
+            "domainPrefix": "id",
+            "extendedRequestId": "request-id",
+            "httpMethod": "GET",
+            "identity": {
+                "accessKey": null,
+                "accountId": null,
+                "caller": null,
+                "cognitoAuthenticationProvider": null,
+                "cognitoAuthenticationType": null,
+                "cognitoIdentityId": null,
+                "cognitoIdentityPoolId": null,
+                "principalOrgId": null,
+                "sourceIp": "192.0.2.1",
+                "user": null,
+                "userAgent": "user-agent",
+                "userArn": null,
+                "clientCert": {
+                    "clientCertPem": "CERT_CONTENT",
+                    "subjectDN": "www.example.com",
+                    "issuerDN": "Example issuer",
+                    "serialNumber": "a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1:a1",
+                    "validity": {
+                        "notBefore": "May 28 12:30:02 2019 GMT",
+                        "notAfter": "Aug  5 09:36:04 2021 GMT"
+                    }
+                }
+            },
+            "path": "/my/path",
+            "protocol": "HTTP/1.1",
+            "requestId": "id=",
+            "requestTime": "04/Mar/2020:19:15:17 +0000",
+            "requestTimeEpoch": 1583349317135,
+            "resourceId": null,
+            "resourcePath": "/my/path",
+            "stage": "$default"
+        },
+        "pathParameters": null,
+        "stageVariables": null,
+        "body": '{\n\t"req-body": "some-data"\n}',
+        "isBase64Encoded": false
+    }
+
+    let apiGatewayEventV2 = {
+        version: "2.0",
         headers: {
             accept: '*/*',
             'content-length': '28',
@@ -58,6 +133,7 @@ describe('Lambda test', () => {
 
 
     it('can capture request data from api gateway event', () => {
+        let event = apiGatewayEventV2
         let tracer = agentTestWrapper._provider.getTracer("@hypertrace/nodejsagent")
         let span = tracer.startSpan("lambda-span")
         LambdaRequestHook(span, {event, context})
@@ -71,13 +147,46 @@ describe('Lambda test', () => {
         expect(lambdaSpan.attributes['http.target']).to.equal('/default/nodejs-test')
         expect(lambdaSpan.attributes['http.request.header.content-type']).to.equal('application/json')
         expect(lambdaSpan.attributes['http.request.header.user-agent']).to.equal('insomnia/2021.7.2')
-        expect(lambdaSpan.attributes['http.request.header.cookie']).to.equal('a=b;foo=bar')
         expect(lambdaSpan.attributes['http.request.body']).to.equal('{\n' +
             '\t"req-body": "some-data"\n' +
             '}')
     })
 
     it('can capture response data from returned lambda map', () => {
+        let tracer = agentTestWrapper._provider.getTracer("@hypertrace/nodejsagent")
+        let span = tracer.startSpan("lambda-span")
+        LambdaResponseHook(span, {err: undefined, res: response})
+        span.end()
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(1)
+        let lambdaSpan = spans[0]
+        expect(lambdaSpan.attributes['http.status_code']).to.equal('200')
+        expect(lambdaSpan.attributes['http.response.header.a-header']).to.equal('some_VALUE')
+        expect(lambdaSpan.attributes['http.response.header.content-type']).to.equal('application/json')
+        expect(lambdaSpan.attributes['http.response.body']).to.equal('{"some_body_data":"response-data"}')
+    })
+
+    it('apigateway v1 - can capture request data from api gateway event', () => {
+        let event = apiGatewayEventV1
+        let tracer = agentTestWrapper._provider.getTracer("@hypertrace/nodejsagent")
+        let span = tracer.startSpan("lambda-span")
+        LambdaRequestHook(span, {event, context})
+        span.end()
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(1)
+        let lambdaSpan = spans[0]
+        expect(lambdaSpan.attributes['http.method']).to.equal('PUT')
+        expect(lambdaSpan.attributes['http.scheme']).to.equal('https')
+        expect(lambdaSpan.attributes['http.host']).to.equal('id.execute-api.us-east-1.amazonaws.com')
+        expect(lambdaSpan.attributes['http.target']).to.equal('/my/path')
+        expect(lambdaSpan.attributes['http.request.header.content-type']).to.equal('application/json')
+        expect(lambdaSpan.attributes['http.request.header.header1']).to.equal('value1')
+        expect(lambdaSpan.attributes['http.request.body']).to.equal('{\n' +
+            '\t"req-body": "some-data"\n' +
+            '}')
+    })
+
+    it('apigateway v1 - can capture response data from returned lambda map', () => {
         let tracer = agentTestWrapper._provider.getTracer("@hypertrace/nodejsagent")
         let span = tracer.startSpan("lambda-span")
         LambdaResponseHook(span, {err: undefined, res: response})

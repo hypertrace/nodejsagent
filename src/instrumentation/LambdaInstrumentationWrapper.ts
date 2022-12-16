@@ -10,13 +10,23 @@ export function LambdaRequestHook(span, {event, context}){
     logger.debug('received lambda event')
     logger.debug(event)
 
-    if(lambdaRequestContext['http']) {
-        let httpContext = lambdaRequestContext['http']
-        span.setAttribute(SemanticAttributes.HTTP_METHOD, httpContext['method'])
+    let apiGatewayVersion = event["version"]
+    if (apiGatewayVersion === "2.0") {
+        if(lambdaRequestContext['http']) {
+            let httpContext = lambdaRequestContext['http']
+            span.setAttribute(SemanticAttributes.HTTP_METHOD, httpContext['method'])
+            span.setAttribute(SemanticAttributes.HTTP_SCHEME, headers['x-forwarded-proto'])
+            span.setAttribute(SemanticAttributes.HTTP_TARGET, httpContext['path'])
+            span.setAttribute(SemanticAttributes.HTTP_HOST, headers['host'])
+        }
+    } else if (apiGatewayVersion === "1.0") {
+        span.setAttribute(SemanticAttributes.HTTP_METHOD, event['httpMethod'])
         span.setAttribute(SemanticAttributes.HTTP_SCHEME, headers['x-forwarded-proto'])
-        span.setAttribute(SemanticAttributes.HTTP_TARGET, httpContext['path'])
-        span.setAttribute(SemanticAttributes.HTTP_HOST, headers['host'])
+        span.setAttribute(SemanticAttributes.HTTP_TARGET, event['path'])
+        span.setAttribute(SemanticAttributes.HTTP_HOST, lambdaRequestContext['domainName'])
     }
+
+
 
     let cookies = event['cookies']
     if(cookies) {
