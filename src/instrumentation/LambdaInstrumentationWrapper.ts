@@ -10,6 +10,7 @@ export function LambdaRequestHook(span, {event, context}){
     logger.debug('received lambda event')
     logger.debug(event)
 
+<<<<<<< HEAD
     // event["version"] is not always present
     // the request context will have an `http` field if v2
     if(lambdaRequestContext['http']) {

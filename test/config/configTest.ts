@@ -31,7 +31,7 @@ describe('Config tests', () => {
         expect(config.config.data_capture.rpc_body.request).to.equal(true)
         expect(config.config.data_capture.rpc_body.response).to.equal(true)
         expect(config.config.data_capture.body_max_size_bytes).to.equal(131072)
-        expect(config.config.data_capture.body_max_processing_size_bytes).to.equal(1048576)
+        expect(config.config.data_capture.body_max_processing_size_bytes).to.equal(131072)
 
         expect(config.config.resource_attributes).to.eql({})
     });
