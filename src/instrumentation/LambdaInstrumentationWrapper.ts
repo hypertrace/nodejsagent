@@ -10,18 +10,18 @@ export function LambdaRequestHook(span, {event, context}){
     logger.debug('received lambda event')
     logger.debug(event)
 
-    let apiGatewayVersion = event["version"]
-    if (apiGatewayVersion === "2.0") {
-        if(lambdaRequestContext['http']) {
-            let httpContext = lambdaRequestContext['http']
-            span.setAttribute(SemanticAttributes.HTTP_METHOD, httpContext['method'])
-            span.setAttribute(SemanticAttributes.HTTP_SCHEME, headers['x-forwarded-proto'])
-            span.setAttribute(SemanticAttributes.HTTP_TARGET, httpContext['path'])
-            span.setAttribute(SemanticAttributes.HTTP_HOST, headers['host'])
-        }
-    } else if (apiGatewayVersion === "1.0") {
-        span.setAttribute(SemanticAttributes.HTTP_METHOD, event['httpMethod'])
+    // event["version"] is not always present
+    // the request context will have an `http` field if v2
+    if(lambdaRequestContext['http']) {
+        let httpContext = lambdaRequestContext['http']
+        span.setAttribute(SemanticAttributes.HTTP_METHOD, httpContext['method'])
         span.setAttribute(SemanticAttributes.HTTP_SCHEME, headers['x-forwarded-proto'])
+        span.setAttribute(SemanticAttributes.HTTP_TARGET, httpContext['path'])
+        span.setAttribute(SemanticAttributes.HTTP_HOST, headers['host'])
+    } else {
+        span.setAttribute(SemanticAttributes.HTTP_METHOD, event['httpMethod'])
+        let proto_header = headers['x-forwarded-proto'] || headers['X-Forwarded-Proto']
+        span.setAttribute(SemanticAttributes.HTTP_SCHEME, proto_header)
         span.setAttribute(SemanticAttributes.HTTP_TARGET, event['path'])
         span.setAttribute(SemanticAttributes.HTTP_HOST, lambdaRequestContext['domainName'])
     }

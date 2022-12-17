@@ -6,7 +6,7 @@ agentTestWrapper.instrument()
 
 describe('Lambda test', () => {
     let apiGatewayEventV1 = {
-        "version": "1.0",
+        // "version": "1.0", version isn't always present so cant be relied on
         "resource": "/my/path",
         "path": "/my/path",
         "httpMethod": "PUT",
@@ -80,7 +80,7 @@ describe('Lambda test', () => {
     }
 
     let apiGatewayEventV2 = {
-        version: "2.0",
+        // "version": "2.0", version isn't always present so cant be relied on
         headers: {
             accept: '*/*',
             'content-length': '28',
