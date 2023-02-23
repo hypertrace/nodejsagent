@@ -134,10 +134,13 @@ function clientStreamAndUnaryHandler<RequestType, ResponseType>(
             });
         } else {
             span.setStatus({ code: SpanStatusCode.UNSET });
-            span.setAttribute(
-                SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                SpanStatusCode.OK.toString()
-            );
+            span.setAttribute(SemanticAttributes.RPC_GRPC_STATUS_CODE, 0)
+            // This will set a SpanStatus which is different from grpc status
+            // if no error, use grpc 0 for OK
+            // span.setAttribute(
+            //     SemanticAttributes.RPC_GRPC_STATUS_CODE,
+            //     SpanStatusCode.OK.toString()
+            // );
         }
         createAndAddBodyCapture(span, value, 'response')
         span.end();

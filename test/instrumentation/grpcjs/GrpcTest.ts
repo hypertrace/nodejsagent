@@ -86,10 +86,10 @@ describe('Grpc JS Support', () => {
             expect(spans.length).to.equal(2)
 
             let ssAttributes = spans[0].attributes
-            expect(ssAttributes['rpc.grpc.status_code']).to.equal("1")
+            expect(ssAttributes['rpc.grpc.status_code']).to.equal(0)
 
             let csAttributes = spans[1].attributes
-            expect(csAttributes['rpc.grpc.status_code']).to.equal("1")
+            expect(csAttributes['rpc.grpc.status_code']).to.equal(0)
         })
     })
 
