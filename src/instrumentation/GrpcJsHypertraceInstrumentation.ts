@@ -315,7 +315,8 @@ export class GrpcJsHypertraceInstrumentation extends InstrumentationBase {
                 const span = instrumentation.tracer.startSpan(name, {
                     kind: SpanKind.CLIENT,
                 });
-
+                span.setAttribute("rpc.system", "grpc")
+                span.setAttribute("grpc.content_type", "application/grpc")
                 addMetadataToSpan(span, metadata, 'request')
                 createAndAddBodyCapture(span, args[0], 'request')
 

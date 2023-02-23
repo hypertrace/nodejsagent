@@ -142,6 +142,8 @@ function clientStreamAndUnaryHandler<RequestType, ResponseType>(
             //     SpanStatusCode.OK.toString()
             // );
         }
+        span.setAttribute("rpc.system", "grpc")
+        span.setAttribute("grpc.content_type", "application/grpc")
         createAndAddBodyCapture(span, value, 'response')
         span.end();
         return callback(err, value);
