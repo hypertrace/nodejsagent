@@ -73,10 +73,13 @@ export function makeGrpcClientRemoteCall(
                 });
             } else {
                 span.setStatus({ code: SpanStatusCode.UNSET });
-                span.setAttribute(
-                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                    SpanStatusCode.OK.toString() // this wasn't matching server behavior of unset = Ok
-                );
+                span.setAttribute(SemanticAttributes.RPC_GRPC_STATUS_CODE, 0)
+                // This will set a SpanStatus=1 which is different from grpc status
+                // if no error, use grpc 0 for OK
+                // span.setAttribute(
+                //     SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                //     SpanStatusCode.OK.toString() // this wasn't matching server behavior of unset = Ok
+                // );
             }
 
             span.end();

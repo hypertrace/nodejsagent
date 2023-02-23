@@ -86,10 +86,23 @@ describe('Grpc JS Support', () => {
             expect(spans.length).to.equal(2)
 
             let ssAttributes = spans[0].attributes
-            expect(ssAttributes['rpc.grpc.status_code']).to.equal("1")
+            expect(ssAttributes['rpc.grpc.status_code']).to.equal(0)
 
             let csAttributes = spans[1].attributes
-            expect(csAttributes['rpc.grpc.status_code']).to.equal("1")
+            expect(csAttributes['rpc.grpc.status_code']).to.equal(0)
+        })
+
+        it('includes grpc indicator attributes',  () => {
+            let spans = agentTestWrapper.getSpans()
+            expect(spans.length).to.equal(2)
+
+            let ssAttributes = spans[0].attributes
+            expect(ssAttributes['rpc.system']).to.equal('grpc')
+            expect(ssAttributes['grpc.content_type']).to.equal('application/grpc')
+
+            let csAttributes = spans[1].attributes
+            expect(csAttributes['rpc.system']).to.equal('grpc')
+            expect(csAttributes['grpc.content_type']).to.equal('application/grpc')
         })
     })
 
