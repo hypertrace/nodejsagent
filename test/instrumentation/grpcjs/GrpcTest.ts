@@ -112,6 +112,7 @@ describe('Grpc JS Support', () => {
             let ssAttributes = spans[0].attributes
             expect(ssAttributes["net.peer.ip"]).to.exist
             expect(ssAttributes["net.peer.port"]).to.exist
+
         })
     })
 
