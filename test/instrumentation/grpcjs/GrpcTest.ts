@@ -104,6 +104,16 @@ describe('Grpc JS Support', () => {
             expect(csAttributes['rpc.system']).to.equal('grpc')
             expect(csAttributes['grpc.content_type']).to.equal('application/grpc')
         })
+
+        it('captures peer ip & port', () => {
+            let spans = agentTestWrapper.getSpans()
+            expect(spans.length).to.equal(2)
+
+            let ssAttributes = spans[0].attributes
+            expect(ssAttributes["net.peer.ip"]).to.exist
+            expect(ssAttributes["net.peer.port"]).to.exist
+
+        })
     })
 
     describe('filter api', () => {

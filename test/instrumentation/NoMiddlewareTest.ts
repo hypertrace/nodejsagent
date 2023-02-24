@@ -95,6 +95,7 @@ describe('Simple app without middleware', () => {
             let spans = agentTestWrapper.getSpans()
             expect(spans.length).to.equal(2)
             let serverSpan = spans[0]
+            expect(serverSpan.attributes["net.peer.ip"]).to.exist
             expect(serverSpan.attributes['http.status_code']).to.equal(403)
             expect(serverSpan.attributes['http.status_text']).to.equal('FORBIDDEN')
 
