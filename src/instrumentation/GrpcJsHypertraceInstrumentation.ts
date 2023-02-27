@@ -20,8 +20,8 @@ import {
     InstrumentationNodeModuleDefinition,
     isWrapped,
 } from '@opentelemetry/instrumentation';
-import { InstrumentationBase } from '@opentelemetry/instrumentation';
-import { GrpcInstrumentationConfig } from '@opentelemetry/instrumentation-grpc/build/src/types';
+import {InstrumentationBase} from '@opentelemetry/instrumentation';
+import {GrpcInstrumentationConfig} from '@opentelemetry/instrumentation-grpc/build/src/types';
 import {
     ServerCallWithMeta,
     SendUnaryDataCallback,
@@ -39,7 +39,7 @@ import {
     SpanKind,
     trace,
 } from '@opentelemetry/api';
-import { VERSION } from '@opentelemetry/instrumentation-grpc/build/src/version';
+import {VERSION} from '@opentelemetry/instrumentation-grpc/build/src/version';
 import {
     shouldNotTraceServerCall,
     handleServerFunction,
@@ -49,13 +49,13 @@ import {
     getMethodsToWrap,
     getMetadata,
 } from '@opentelemetry/instrumentation-grpc/build/src/grpc-js/clientUtils';
-import { makeGrpcClientRemoteCall } from './GrpcJsHypertraceClientUtils'
-import { EventEmitter } from 'events';
-import { AttributeNames } from '@opentelemetry/instrumentation-grpc/build/src/enums/AttributeNames';
+import {makeGrpcClientRemoteCall} from './GrpcJsHypertraceClientUtils'
+import {EventEmitter} from 'events';
+import {AttributeNames} from '@opentelemetry/instrumentation-grpc/build/src/enums/AttributeNames';
 import {logger} from "../Logging";
 import {ServerUnaryCallImpl} from "@grpc/grpc-js/build/src/server-call";
 import {Registry} from "../filter/Registry";
-import { REQUEST_TYPE} from "../filter/Filter";
+import {REQUEST_TYPE} from "../filter/Filter";
 import {BodyCapture} from "./BodyCapture";
 import {Config} from "../config/config";
 import {ServiceError} from "@grpc/grpc-js";
@@ -203,9 +203,10 @@ export class GrpcJsHypertraceInstrumentation extends InstrumentationBase {
                                             [AttributeNames.GRPC_KIND]: spanOptions.kind,
                                         });
 
+
                                     addMetadataToSpan(span, call.metadata, 'request')
                                     let bodyCapture = createAndAddBodyCapture(span, (call as ServerUnaryCallImpl<RequestType, ResponseType>).request, 'request')
-
+                                    setPeerData(span, call)
                                     let filterResult = Registry.getInstance().applyFilters(span,
                                         name,
                                         call.metadata.getMap(),
@@ -213,15 +214,15 @@ export class GrpcJsHypertraceInstrumentation extends InstrumentationBase {
                                         REQUEST_TYPE.RPC
                                     )
                                     if (filterResult) {
-                                       let errorStatus = {
-                                           code: 7,
-                                           details: "Forbidden",
-                                           metadata: new Metadata()
-                                       }
-                                       // since we are ending the call here, we need to set span status & end it so it is exported
-                                       span.setAttribute('rpc.grpc.status_code', "7")
-                                       span.end()
-                                       return callback(errorStatus as unknown as ServiceError, undefined)
+                                        let errorStatus = {
+                                            code: 7,
+                                            details: "Forbidden",
+                                            metadata: new Metadata()
+                                        }
+                                        // since we are ending the call here, we need to set span status & end it so it is exported
+                                        span.setAttribute('rpc.grpc.status_code', "7")
+                                        span.end()
+                                        return callback(errorStatus as unknown as ServiceError, undefined)
                                     }
                                     context.with(trace.setSpan(context.active(), span), () => {
                                         handleServerFunction.call(
@@ -303,6 +304,7 @@ export class GrpcJsHypertraceInstrumentation extends InstrumentationBase {
         const instrumentation = this;
         return (original: GrpcClientFunc) => {
             instrumentation._diag.debug('patch all client methods');
+
             function clientMethodTrace(this: grpcJs.Client) {
                 const name = `grpc.${original.path.replace('/', '')}`;
                 const args = [...arguments];
@@ -315,7 +317,8 @@ export class GrpcJsHypertraceInstrumentation extends InstrumentationBase {
                 const span = instrumentation.tracer.startSpan(name, {
                     kind: SpanKind.CLIENT,
                 });
-
+                span.setAttribute("rpc.system", "grpc")
+                span.setAttribute("grpc.content_type", "application/grpc")
                 addMetadataToSpan(span, metadata, 'request')
                 createAndAddBodyCapture(span, args[0], 'request')
 
@@ -323,6 +326,7 @@ export class GrpcJsHypertraceInstrumentation extends InstrumentationBase {
                     makeGrpcClientRemoteCall(original, args, metadata, this)(span)
                 );
             }
+
             Object.assign(clientMethodTrace, original);
             return clientMethodTrace;
         };
@@ -360,14 +364,32 @@ export class GrpcJsHypertraceInstrumentation extends InstrumentationBase {
 export function addMetadataToSpan(span, metadata, type) {
     try {
         let keyPrefix = `rpc.${type}.metadata`
-        for(let entry of Object.keys(metadata.getMap())) {
+        for (let entry of Object.keys(metadata.getMap())) {
             span.setAttribute(`${keyPrefix}.${entry}`, metadata.get(entry).toString())
         }
-    } catch(e){
+    } catch (e) {
         logger.error('error adding grpc metadata data to span')
         logger.error(e)
     }
 }
+
+function setPeerData(span, call) {
+    let socket = call.call.stream.session.socket
+    if(!socket){
+        return
+    }
+
+    const remoteAddress = socket.remoteAddress
+    const remotePort = socket.remotePort
+    if (remoteAddress) {
+        span.setAttribute("net.peer.ip", remoteAddress)
+    }
+    if (remotePort) {
+        span.setAttribute("net.peer.port", remotePort)
+    }
+
+}
+
 
 export function createAndAddBodyCapture(span, bodyObject, type) {
     try {
@@ -377,7 +399,7 @@ export function createAndAddBodyCapture(span, bodyObject, type) {
         bodyCapture.appendData(JSON.stringify(bodyObject))
         span.setAttribute(key, bodyCapture.dataString())
         return bodyCapture
-    } catch(e) {
+    } catch (e) {
         logger.error('error adding grpc body data to span')
         logger.error(e)
     }

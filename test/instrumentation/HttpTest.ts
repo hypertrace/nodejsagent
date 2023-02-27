@@ -54,6 +54,7 @@ describe('Agent tests', () => {
         let spans = agentTestWrapper.getSpans()
         expect(spans.length).to.equal(2)
         let serverSpanAttributes = spans[0].attributes
+        expect(serverSpanAttributes["net.peer.ip"]).to.exist
         expect(serverSpanAttributes['http.method']).to.equal('GET')
         expect(serverSpanAttributes['net.host.name']).to.equal('localhost')
         expect(serverSpanAttributes['http.target']).to.equal('/')
