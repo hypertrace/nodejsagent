@@ -430,6 +430,17 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                         response.statusMessage = MESSAGE
                         span.setAttribute('http.status_code', STATUS_CODE)
                         span.setAttribute('http.status_text', MESSAGE)
+                        // @ts-ignore
+                        if(response.setHeader) {
+                            // @ts-ignore
+                            response.setHeader = function (name, value) {
+                                return this;
+                            };
+                            // @ts-ignore
+                            response.removeHeader = function(name) {
+                                return;
+                            }
+                        }
                         response.end()
                         // @ts-ignore
                         utils.setSpanWithError(span, e);

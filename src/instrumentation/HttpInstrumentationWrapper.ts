@@ -120,6 +120,17 @@ export class HttpInstrumentationWrapper {
                                     // @ts-ignore
                                     request.res.end()
                                     // @ts-ignore
+                                    if(request.res.setHeader) {
+                                        // @ts-ignore
+                                        request.res.setHeader = function (name, value) {
+                                            return this;
+                                        };
+                                        // @ts-ignore
+                                        request.res.removeHeader = function(name) {
+                                            return;
+                                        }
+                                    }
+                                    // @ts-ignore
                                     hypertraceDomain.add(request)
                                     throw filterError()
                                 } else {
