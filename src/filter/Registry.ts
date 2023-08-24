@@ -23,11 +23,9 @@ export class Registry {
     }
 
     public applyFilters(span: Span, url: string | undefined, headers: any, body: string | undefined, requestType: REQUEST_TYPE) : boolean {
-        let rebuiltUrl = this.getUrl(span)
-        span.setAttribute("http.url", rebuiltUrl)
         if(url || headers) {
             for(let filter of this.filters) {
-                if(filter.evaluateUrlAndHeaders(span, rebuiltUrl, headers, requestType)) {
+                if(filter.evaluateUrlAndHeaders(span, url, headers, requestType)) {
                     return true
                 }
             }
@@ -41,35 +39,5 @@ export class Registry {
         }
 
         return false
-    }
-
-    private getUrl(span: Span) : string {
-        // @ts-ignore
-        let scheme = span.attributes['http.scheme']
-        if (!scheme) {
-            return "";
-        }
-        // @ts-ignore
-        let host = span.attributes['net.host.name']
-        if (!host) {
-            return "";
-        }
-
-        // @ts-ignore
-        let target = span.attributes['http.target']
-        if (!target) {
-            return "";
-        }
-
-        let url = scheme + "://" + host;
-
-        // @ts-ignore
-        let port = span.attributes['net.host.port']
-        if (port) {
-            url = url + ":" + port;
-        }
-
-        url = url + target;
-        return url;
     }
 }

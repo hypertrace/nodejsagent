@@ -260,7 +260,6 @@ describe('Agent tests', () => {
             expect(spans.length).to.equal(2)
             let serverSpan = spans[0]
             expect(serverSpan.attributes['http.status_code']).to.equal(200)
-            expect(serverSpan.attributes['http.url']).to.equal("http://localhost:8000/test_post")
 
             let requestSpan = spans[1]
             expect(requestSpan.attributes['http.status_code']).to.equal(200)

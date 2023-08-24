@@ -210,7 +210,6 @@ if(isCompatible("12.0.0") === true){
                 let serverSpan = spans[0]
                 expect(serverSpan.attributes['http.status_code']).to.equal(403)
                 expect(serverSpan.attributes['http.status_text']).to.equal('FORBIDDEN')
-                expect(serverSpan.attributes['http.url']).to.equal('http://localhost:8000/test-post')
 
                 let requestSpan = spans[1]
                 expect(requestSpan.attributes['http.status_code']).to.equal(403)
