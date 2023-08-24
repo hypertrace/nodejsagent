@@ -40,6 +40,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
       - run: npm install
+      - run: npm install -g typescript@4.9.4
 
       - uses: actions/download-artifact@v2
         with:
