@@ -18,6 +18,7 @@ import {getRPCMetadata, RPCType} from "@opentelemetry/core";
 import {SemanticAttributes} from "@opentelemetry/semantic-conventions";
 import {Framework} from "./Framework";
 import {hypertraceDomain} from "../HypertraceAgent";
+import http from "http";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -60,6 +61,12 @@ export class HttpInstrumentationWrapper {
             this.setIncomingRequestAttributes(span, request);
 
             let headers = request.headers
+            // @ts-ignore
+            if(request.socket && request.socket.server instanceof http.Server) {
+                span.setAttribute("http.scheme", "http")
+            } else {
+                span.setAttribute("http.scheme", "https")
+            }
             let filterResult = Registry.getInstance().applyFilters(span,
                 request.url,
                 headers,
@@ -119,6 +126,17 @@ export class HttpInstrumentationWrapper {
                                     request.res.status(STATUS_CODE)
                                     // @ts-ignore
                                     request.res.end()
+                                    // @ts-ignore
+                                    if(request.res.setHeader) {
+                                        // @ts-ignore
+                                        request.res.setHeader = function (name, value) {
+                                            return this;
+                                        };
+                                        // @ts-ignore
+                                        request.res.removeHeader = function(name) {
+                                            return;
+                                        }
+                                    }
                                     // @ts-ignore
                                     hypertraceDomain.add(request)
                                     throw filterError()

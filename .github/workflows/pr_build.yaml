@@ -40,6 +40,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
       - run: npm install
+      - run: npm install -g typescript@4.9.4
 
       - uses: actions/download-artifact@v2
         with:
@@ -59,6 +60,9 @@ jobs:
         run: npm install codecov -g
       - name: Run Tests With Coverage
         run: npm run coverage
+
+      - name: Run Integration Body Filter Test
+        run: cd ./test/integration && ./integration_test.sh
 
       - name: Upload coverage # only upload results from 1 matrix version, not all
         if: matrix.node_version == '16'
