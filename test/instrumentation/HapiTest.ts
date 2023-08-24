@@ -13,7 +13,7 @@ import {REQUEST_TYPE} from "../../lib/filter/Filter";
 import {isCompatible} from "../../lib/instrumentation/InstrumentationCompat";
 import {Framework} from "../../src/instrumentation/Framework";
 
-// if(isCompatible("12.0.0") === true){
+if(isCompatible("12.0.0") === true){
     const Hapi = require('@hapi/hapi');
 
     describe('Hapi tests', () => {
@@ -256,4 +256,4 @@ import {Framework} from "../../src/instrumentation/Framework";
 
 
     });
-// }
+}
