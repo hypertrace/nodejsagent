@@ -3,6 +3,7 @@ import {context, trace} from "@opentelemetry/api";
 import {HttpInstrumentationWrapper} from "../HttpInstrumentationWrapper";
 import {BodyCapture} from "../BodyCapture";
 import {Config} from "../../config/config";
+import {logger} from "../../Logging";
 
 let patched = false
 const shimmer = require('shimmer');
@@ -52,7 +53,13 @@ export function patchHapi() {
         return
     }
     patched = true
-    const hapiResponse = require('@hapi/hapi/lib/response')
+    try {
+        const hapiResponse = require('@hapi/hapi/lib/response')
+        shimmer.wrap(hapiResponse, 'wrap', HapiWrapWithConfig(Config.getInstance()))
+    }catch(e){
+        logger.debug("Could not configure hapi response listener - continuing without hapi instrumentation")
+    }
 
-    shimmer.wrap(hapiResponse, 'wrap', HapiWrapWithConfig(Config.getInstance()))
+
+
 }
