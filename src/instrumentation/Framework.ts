@@ -36,7 +36,7 @@ export class Framework {
     }
 
     public noFrameworks = () => {
-        return(this.frameworks['sails'] || this.frameworks['nestjs'] || this.frameworks['koa'] || this.frameworks['hapi'] || this.frameworks['express'])
+        return(this.frameworks['sails'] || this.frameworks['@nestjs/core'] || this.frameworks['koa'] || this.frameworks['@hapi/hapi'] || this.frameworks['express'])
     }
 
     available = (mod: string) => {

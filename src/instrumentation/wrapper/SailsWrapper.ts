@@ -1,5 +1,6 @@
 import {MESSAGE} from "../../filter/Filter";
 import {available} from "./ExpressWrapper";
+import {logger} from "../../Logging";
 
 function sailsErrorHandlerSetup() {
     const sails = require('sails')
@@ -15,5 +16,10 @@ export function patchSails(){
     if(!available('sails')){
         return
     }
-    sailsErrorHandlerSetup()
+    try {
+        sailsErrorHandlerSetup()
+    } catch(e){
+        logger.debug("Could not configure sails listener - continuing without sails instrumentation")
+    }
+
 }
