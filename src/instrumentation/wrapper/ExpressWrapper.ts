@@ -80,11 +80,17 @@ function ResponseCaptureWithConfig(config: any): Function {
             }
             // sometimes we can't capture a chunk at a certain scope because content-type isn't set yet,
             // in that case we dont want to enter scope until we have captured
-            // @ts-ignore
-            span.inHtCaptureScope = capturedChunk;
+            if(span){
+                // @ts-ignore
+                span.inHtCaptureScope = capturedChunk;
+            }
+
             let ret = original.apply(this, arguments)
-            // @ts-ignore
-            span.inHtCaptureScope = false;
+            if(span){
+                // @ts-ignore
+                span.inHtCaptureScope = false;
+            }
+
             return ret
         }
     }
