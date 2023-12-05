@@ -35,7 +35,10 @@ import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
 import {Framework} from "./instrumentation/Framework";
 import {LambdaRequestHook, LambdaResponseHook} from "./instrumentation/LambdaInstrumentationWrapper";
 import {patchHapi} from "./instrumentation/wrapper/HapiWrapper";
+
 const api = require("@opentelemetry/api");
+const grpc = require('@grpc/grpc-js');
+const fs = require('fs');
 
 const {Resource} = require('@opentelemetry/resources');
 
@@ -73,7 +76,7 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
-        if(Framework.getInstance().available('@grpc/grpc-js')) {
+        if (Framework.getInstance().available('@grpc/grpc-js')) {
             // we need to check for grpc a level up before trying to patch since we cant "require" in the
             // specific class we need to instead it has to be imported,
             // but imports cant occur within conditionals
@@ -108,7 +111,7 @@ export class HypertraceAgent {
             new MongooseInstrumentation()
         ]
 
-        if(isCompatible("12.0.0")){
+        if (isCompatible("12.0.0")) {
             // Imports are only allowed at top level
             // so instead we need to require it if the node version is modern enough
             patchHapi()
@@ -190,9 +193,16 @@ export class HypertraceAgent {
             return new InMemorySpanExporter()
         } else {
             logger.info(`Creating OTLP exporter reporting to: ${this.config.config.reporting.endpoint}`)
+            const credentials = this.config.config.reporting.cert_file.length > 0
+                ? grpc.credentials.createSsl(
+                    fs.readFileSync(this.config.config.reporting.cert_file)
+                )
+                : grpc.credentials.createInsecure();
+
             return new OTLPTraceExporter({
-                url: this.config.config.reporting.endpoint
-            })
+                url: this.config.config.reporting.endpoint,
+                credentials,
+            });
         }
     }
 }
