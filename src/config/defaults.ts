@@ -5,6 +5,7 @@ const DEFAULT_AGENT_CONFIG = {
     'reporting': {
         'endpoint': 'http://localhost:4317',
         'secure': false,
+        'cert_file': "",
         'trace_reporter_type': 'OTLP',
         'token': '',
         'opa': {

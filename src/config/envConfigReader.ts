@@ -30,6 +30,10 @@ export function loadFromEnv(): object{
     if(reportingSecure){
         reporting['secure'] = isTrue(<string>reportingSecure)
     }
+    let reportingCertFile = getEnvValue("REPORTING_CERT_FILE")
+    if(reportingCertFile){
+        reporting["cert_file"] = reportingCertFile
+    }
 
     let reportingToken = getEnvValue('REPORTING_TOKEN')
     if(reportingToken){

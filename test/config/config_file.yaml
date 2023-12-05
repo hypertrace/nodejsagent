@@ -2,6 +2,7 @@ service_name: node_agent_001
 reporting:
   endpoint: http://localhost:9411/api/v2/spans
   secure: true
+  cert_file: ./someRootCA.crt
   trace_reporter_type: ZIPKIN
   token: "TestToken"
   opa:

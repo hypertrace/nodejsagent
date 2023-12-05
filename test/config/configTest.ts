@@ -21,6 +21,7 @@ describe('Config tests', () => {
         expect(config.config.reporting.endpoint).to.equal('http://localhost:4317')
         expect(config.config.reporting.secure).to.equal(false)
         expect(config.config.reporting.trace_reporter_type).to.equal('OTLP')
+        expect(config.config.reporting.cert_file).to.equal('./someRootCA.crt')
 
         expect(config.config.data_capture.http_headers.request).to.equal(true)
         expect(config.config.data_capture.http_headers.response).to.equal(true)
