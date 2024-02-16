@@ -3,7 +3,7 @@ import {isCompatible} from "./instrumentation/InstrumentationCompat";
 
 require('./instrumentation/instrumentation-patch');
 
-import {AwsLambdaInstrumentation} from "./instrumentation/LambdaHypertraceInstrumentation";
+import {ExtendedAwsLambdaInstrumentation} from "./instrumentation/ExtendedAwsLambdaInstrumentation";
 import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/sdk-trace-base';
 import {ZipkinExporter} from '@opentelemetry/exporter-zipkin';
@@ -60,7 +60,7 @@ export class HypertraceAgent {
     }
 
     instrumentLambda(handlerFunc) {
-        return AwsLambdaInstrumentation.TraceLambda(handlerFunc, {
+        return ExtendedAwsLambdaInstrumentation.TraceLambda(handlerFunc, {
             requestHook: LambdaRequestHook,
             responseHook: LambdaResponseHook
         }, this._provider)
@@ -92,7 +92,7 @@ export class HypertraceAgent {
         }
 
         let instrumentations = [
-            new AwsLambdaInstrumentation({
+            new ExtendedAwsLambdaInstrumentation({
                 requestHook: LambdaRequestHook,
                 responseHook: LambdaResponseHook,
                 disableAwsContextPropagation: true
