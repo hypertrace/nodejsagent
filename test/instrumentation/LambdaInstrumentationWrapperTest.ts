@@ -1,6 +1,7 @@
 import {AgentForTest} from "./AgentForTest";
 import {expect} from "chai";
 import {LambdaRequestHook, LambdaResponseHook} from "../../src/instrumentation/LambdaInstrumentationWrapper";
+import {error} from "loglevel";
 const agentTestWrapper = AgentForTest.getInstance();
 agentTestWrapper.instrument()
 
@@ -236,5 +237,30 @@ describe("manually instrument lambda function", () => {
         expect(lambdaSpan.attributes['http.response.header.a-header']).to.equal('some_VALUE')
         expect(lambdaSpan.attributes['http.response.header.content-type']).to.equal('application/json')
         expect(lambdaSpan.attributes['http.response.body']).to.equal('{"some_body_data":"response-data"}')
+    })
+
+    it('can be manually instrumented and handle error', async () => {
+        async function myHandler(event, context, callback){
+            throw new Error("some error")
+        }
+
+        let wrappedHandler = agentTestWrapper.instrumentLambda(myHandler)
+        try {
+            await wrappedHandler(apiGatewayEventV1, {}, () => {})
+        } catch(_){}
+
+
+        let spans = agentTestWrapper.getSpans()
+        expect(spans.length).to.equal(1)
+        let lambdaSpan = spans[0]
+        expect(lambdaSpan.attributes['http.method']).to.equal('PUT')
+        expect(lambdaSpan.attributes['http.scheme']).to.equal('https')
+        expect(lambdaSpan.attributes['http.host']).to.equal('id.execute-api.us-east-1.amazonaws.com')
+        expect(lambdaSpan.attributes['http.target']).to.equal('/my/path')
+        expect(lambdaSpan.attributes['http.request.header.content-type']).to.equal('application/json')
+        expect(lambdaSpan.attributes['http.request.header.header1']).to.equal('value1')
+        expect(lambdaSpan.attributes['http.request.body']).to.equal('{\n' +
+            '\t"req-body": "some-data"\n' +
+            '}')
     })
 })
