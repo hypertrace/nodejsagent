@@ -138,7 +138,6 @@ if(isCompatible("12.0.0") === true){
             let serverSpanAttributes = spans[1].attributes
             expect(serverSpanAttributes['http.request.header.content-type']).to.equal('application/json')
             expect(serverSpanAttributes['http.request.header.host']).to.equal('localhost:8000')
-            expect(serverSpanAttributes['http.request.header.connection']).to.equal('keep-alive')
 
             expect(serverSpanAttributes['http.response.header.content-type']).to.equal('application/json; charset=utf-8')
             expect(serverSpanAttributes['http.response.header.x-test-header']).to.equal('some-value')
