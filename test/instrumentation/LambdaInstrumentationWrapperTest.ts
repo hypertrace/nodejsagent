@@ -205,6 +205,13 @@ describe('Lambda test', () => {
 })
 
 describe("manually instrument lambda function", () => {
+    beforeEach(() => {
+        agentTestWrapper.stop()
+    })
+
+    afterEach( ()=> {
+        agentTestWrapper.stop()
+    })
     it('can be manually instrumented', async () => {
         async function myHandler(event, context, callback){
             return response
