@@ -49,6 +49,9 @@ export function LambdaRequestHook(span, {event, context}){
 }
 
 export function LambdaResponseHook(span, {err, res}) : void {
+    if(err && !res){
+        return
+    }
     let statusCode = res['statusCode']
     let responseHeaders = res['headers']
     let responseBody = res['body']
