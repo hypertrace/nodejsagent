@@ -1,4 +1,4 @@
-FROM amazon/aws-sam-cli-build-image-nodejs10.x
+FROM amazon/aws-sam-cli-build-image-nodejs14.x
 
 ADD . /workspace
 
