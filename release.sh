@@ -74,7 +74,7 @@ git add $VERSION_FILE
 git commit -m "chore(version): prepares for next version $NEW_VERSION."
 
 set +e
-# git push origin $MAIN_BRANCH
+git push origin $MAIN_BRANCH
 PUSH_RESULT_CODE=$?
 set -e
 
@@ -84,4 +84,4 @@ if [ "$PUSH_RESULT_CODE" != "0" ]; then
     exit 1
 fi
 
-# git push --tags
+git push --tags
