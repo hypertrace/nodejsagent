@@ -58,7 +58,7 @@ git pull origin $MAIN_BRANCH
 
 echo "Writing version file"
 write_version_file $VERSION
-git add $VERSION_FILE
+git add ./package.json
 
 git commit -m "chore(version): changes version to $VERSION"
 
@@ -68,7 +68,7 @@ git tag -a "$VERSION" -m "Version $VERSION"
 NEW_VERSION="$MAJOR.$MINOR.$(($PATCH+1))-dev"
 
 echo "Writing version file for next iteration"
-write_version_file $NEW_VERSION $VERSION_FILE
+write_version_file $NEW_VERSION
 git add ./package.json
 
 git commit -m "chore(version): prepares for next version $NEW_VERSION."
