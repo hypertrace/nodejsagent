@@ -69,7 +69,7 @@ NEW_VERSION="$MAJOR.$MINOR.$(($PATCH+1))-dev"
 
 echo "Writing version file for next iteration"
 write_version_file $NEW_VERSION $VERSION_FILE
-git add $VERSION_FILE
+git add ./package.json
 
 git commit -m "chore(version): prepares for next version $NEW_VERSION."
 
