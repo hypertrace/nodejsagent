@@ -39,8 +39,8 @@ jobs:
           name: proto
           path: ./src/config/
 
-      - run: tsc
-
+      - run: npm run build
+        -
       - name: Publish to npm
         run: npm publish
         env:
