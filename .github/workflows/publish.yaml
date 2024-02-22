@@ -1,7 +1,8 @@
 name: Publish
 on:
-  push:
-    branches: [main, release]
+  create:
+    tags:
+      - '*'
 jobs:
   generate_proto:
     runs-on: ubuntu-20.04
@@ -40,9 +41,7 @@ jobs:
 
       - run: tsc
 
-      - name: Generate release
-        if: contains(github.ref, 'release')
-        run: npx semantic-release
+      - name: Publish to npm
+        run: npm publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_PUBLIC_PUBLISH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLIC_PUBLISH_TOKEN }}
