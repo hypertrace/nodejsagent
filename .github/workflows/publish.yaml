@@ -40,7 +40,7 @@ jobs:
           path: ./src/config/
 
       - run: npm run build
-        -
+
       - name: Publish to npm
         run: npm publish
         env:
