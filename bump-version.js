@@ -5,8 +5,8 @@ const filePathPackageJson = './package.json';
 const args = process.argv.slice(2);
 
 const newVersion = args[0];
-if (!newVersion || !/^\d+\.\d+\.\d+$/.test(newVersion)) {
-    throw new Error("Please pass a valid new version in the format x.x.x");
+if (!newVersion || !/^\d+\.\d+\.\d+(-dev)?$/.test(newVersion)) {
+    throw new Error("Please pass a valid new version in the format x.x.x or x.x.x-dev");
 }
 
 // Read the package.json file
