@@ -85,7 +85,7 @@ describe('Hapi tests', () => {
         expect(requestSpanAttributes['http.target']).to.equal('/')
         expect(requestSpanAttributes['net.transport']).to.equal('ip_tcp')
         expect(requestSpanAttributes['http.status_code']).to.equal(200)
-        expect(spans[2].name).to.equal('HTTP GET')
+        expect(spans[1].name).to.equal('HTTP GET')
     });
 
     it('can capture response body data', async () => {
