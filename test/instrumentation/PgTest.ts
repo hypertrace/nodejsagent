@@ -24,7 +24,7 @@ describe('PG test', () => {
 
         pool.query('SELECT NOW()', (err: Error, res: QueryResult<any>) => {
             let spans = agentTestWrapper.getSpans()
-            expect(spans.length).to.equal(2)
+            expect(spans.length).to.equal(3)
             for(let span of spans) {
                 let spanAttrs = span.attributes
                 expect(spanAttrs["db.name"]).to.equal("hypertrace")
@@ -33,7 +33,7 @@ describe('PG test', () => {
                 expect(spanAttrs["net.peer.port"]).to.equal(5432)
             }
 
-            let querySpan = spans[1]
+            let querySpan = spans[2]
             let queryAttrs = querySpan.attributes;
             expect(queryAttrs["db.statement"]).to.equal("SELECT NOW()")
             pool.end()
@@ -52,8 +52,8 @@ describe('PG test', () => {
         client.connect()
         client.query('SELECT NOW()', (err: Error, res: QueryResult<any>) => {
             let spans = agentTestWrapper.getSpans()
-            expect(spans.length).to.equal(1)
-            let spanAttrs = spans[0].attributes
+            expect(spans.length).to.equal(2)
+            let spanAttrs = spans[1].attributes
             expect(spanAttrs["db.name"]).to.equal("hypertrace")
             expect(spanAttrs["db.system"]).to.equal("postgresql")
             expect(spanAttrs["db.user"]).to.equal("hypertrace")

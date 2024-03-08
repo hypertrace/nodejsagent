@@ -1,8 +1,6 @@
 // need to load patch first to load patch to support import and require
 import {isCompatible} from "./instrumentation/InstrumentationCompat";
 
-require('./instrumentation/instrumentation-patch');
-
 import {ExtendedAwsLambdaInstrumentation} from "./instrumentation/ExtendedAwsLambdaInstrumentation";
 import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/sdk-trace-base';
@@ -27,7 +25,7 @@ import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 import {logger} from "./Logging";
 import {version} from "./Version";
 import {OTLPTraceExporter} from "@opentelemetry/exporter-trace-otlp-grpc";
-import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
+import {MongooseInstrumentation} from "@opentelemetry/instrumentation-mongoose";
 import {GrpcJsHypertraceInstrumentation} from "./instrumentation/GrpcJsHypertraceInstrumentation";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
@@ -83,13 +81,6 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
-        if (Framework.getInstance().available('@grpc/grpc-js')) {
-            // we need to check for grpc a level up before trying to patch since we cant "require" in the
-            // specific class we need to instead it has to be imported,
-            // but imports cant occur within conditionals
-            const grpcWrapper = require('./instrumentation/wrapper/GrpcJsWrapper')
-            grpcWrapper.patchGrpc()
-        }
 
         let instrumentations = [
             new ExtendedAwsLambdaInstrumentation({

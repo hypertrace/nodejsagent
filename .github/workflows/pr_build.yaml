@@ -29,7 +29,7 @@ jobs:
     needs: generate_proto
     strategy:
       matrix:
-        node_version: [ "12", "14", "16", "18", "20" ]
+        node_version: [ "14", "16", "18", "20" ]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
       - run: npm install
-      - run: npm install -g typescript@4.9.4
+      - run: npm install -g typescript@5.4.2
 
       - uses: actions/download-artifact@v2
         with:

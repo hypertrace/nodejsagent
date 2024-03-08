@@ -1,3 +1,4 @@
+// Based on: https://github.com/open-telemetry/opentelemetry-js-contrib/blob/main/plugins/node/opentelemetry-instrumentation-hapi/src/instrumentation.ts
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -22,7 +23,7 @@ import {
     isWrapped,
 } from '@opentelemetry/instrumentation';
 
-import type * as Hapi from '@hapi/hapi';
+import type * as Hapi from 'hapi__hapi';
 import { VERSION } from '@opentelemetry/instrumentation-hapi/build/src/version';
 import {
     HapiComponentName,
@@ -34,7 +35,7 @@ import {
     RegisterFunction,
     PatchableExtMethod,
     ServerExtDirectInput,
-} from '@opentelemetry/instrumentation-hapi/build/src/types';
+} from '@opentelemetry/instrumentation-hapi/build/src/internal-types';
 import {
     getRouteMetadata,
     getPluginName,
@@ -43,9 +44,10 @@ import {
     getExtMetadata,
     isDirectExtInput,
     isPatchableExtMethod,
-    getRootSpanMetadata,
 } from '@opentelemetry/instrumentation-hapi/build/src/utils';
 import {captureWithFilter} from "./wrapper/HapiBodyCapture";
+import {context, SpanAttributes} from "@opentelemetry/api";
+import {SemanticAttributes} from "@opentelemetry/semantic-conventions";
 
 /** Hapi instrumentation for OpenTelemetry */
 export class HapiHypertraceInstrumentation extends InstrumentationBase {
@@ -56,7 +58,7 @@ export class HapiHypertraceInstrumentation extends InstrumentationBase {
     protected init() {
         return new InstrumentationNodeModuleDefinition<typeof Hapi>(
             HapiComponentName,
-            ['>=17.0.0'],
+            ['>=17 <21'],
             moduleExports => {
                 if (!isWrapped(moduleExports.server)) {
                     api.diag.debug('Patching Hapi.server');
@@ -331,8 +333,9 @@ export class HapiHypertraceInstrumentation extends InstrumentationBase {
             const newHandler: PatchableExtMethod = async function (
                 ...params: Parameters<Hapi.Lifecycle.Method>
             ) {
+                // DIFF, get span instead of start, leverage HTTP span
                 if (api.trace.getSpan(api.context.active()) === undefined) {
-                    return await method(...params);
+                    return await method.apply(this, params);
                 }
                 const metadata = getExtMetadata(extPoint, pluginName);
                 const span = instrumentation.tracer.startSpan(metadata.name, {
@@ -381,41 +384,36 @@ export class HapiHypertraceInstrumentation extends InstrumentationBase {
         const oldHandler = route.options?.handler ?? route.handler;
         if (typeof oldHandler === 'function') {
             const newHandler: Hapi.Lifecycle.Method = async function (
-                request: Hapi.Request,
-                h: Hapi.ResponseToolkit,
-                err?: Error
+                ...params: Parameters<Hapi.Lifecycle.Method>
             ) {
-                if (api.trace.getSpan(api.context.active()) === undefined) {
-                    return await oldHandler(request, h, err);
+                const span = api.trace.getSpan(api.context.active());
+                if (span === undefined) {
+                    return await oldHandler(...params);
                 }
-                const hapiSpan = api.trace.getSpan(api.context.active());
 
-                if(captureWithFilter(hapiSpan, request)){
-                    const forbiddenResponse = h.response()
+                const rpcMetadata = getRPCMetadata(api.context.active());
+                if (rpcMetadata?.type === RPCType.HTTP) {
+                    rpcMetadata.route = route.path;
+                }
+
+                // params 0 = req, params[1] = hapi toolkit
+                if(captureWithFilter(span, params[0])){
+                    const forbiddenResponse = params[1].response()
                     const message = "FORBIDDEN"
                     forbiddenResponse.code(403)
                     forbiddenResponse.message(message)
-                    if (hapiSpan){
-                        hapiSpan.setAttribute("http.status_code", 403)
-                        hapiSpan.setAttribute("http.status_text", message)
-                        hapiSpan.end()
+                    if (span){
+                        span.setAttribute("http.status_code", 403)
+                        span.setAttribute("http.status_text", message)
+                        span.end()
                     }
                     forbiddenResponse.takeover()
                     return forbiddenResponse
                 }
 
-                const rpcMetadata = getRPCMetadata(api.context.active());
-                if (rpcMetadata?.type === RPCType.HTTP) {
-                    const rootSpanMetadata = getRootSpanMetadata(route);
-                    rpcMetadata.span.updateName(rootSpanMetadata.name);
-                    rpcMetadata.span.setAttributes(rootSpanMetadata.attributes);
-                }
-                const metadata = getRouteMetadata(route, pluginName);
-                const span = instrumentation.tracer.startSpan(metadata.name, {
-                    attributes: metadata.attributes,
-                });
                 try {
-                    return await oldHandler(request, h, err);
+                    let response =  await oldHandler(...params);
+                    return response
                 } catch (err) {
                     span.recordException(err);
                     span.setStatus({
@@ -423,8 +421,6 @@ export class HapiHypertraceInstrumentation extends InstrumentationBase {
                         message: err.message,
                     });
                     throw err;
-                } finally {
-                    span.end();
                 }
             };
             if (route.options?.handler) {

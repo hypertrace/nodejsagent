@@ -1,3 +1,4 @@
+// Based on: https://github.com/open-telemetry/opentelemetry-js/blob/main/experimental/packages/opentelemetry-instrumentation-grpc/src/serverUtils.ts
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -20,21 +21,32 @@
  * error event should be processed.
  */
 
-import { context, Span, SpanStatusCode } from '@opentelemetry/api';
-import type * as grpcJs from '@grpc/grpc-js';
+import type {
+    ClientReadableStream,
+    handleBidiStreamingCall,
+    handleServerStreamingCall,
+    handleUnaryCall,
+    ServiceError,
+} from '@grpc/grpc-js';
+import type { Span } from '@opentelemetry/api';
+
 import type {
     ServerCallWithMeta,
     SendUnaryDataCallback,
     GrpcEmitter,
     HandleCall,
-} from '@opentelemetry/instrumentation-grpc/build/src/grpc-js/types';
+} from '@opentelemetry/instrumentation-grpc/build/src/internal-types';
+import type { IgnoreMatcher } from '@opentelemetry/instrumentation-grpc/build/src/types';
+
+import { context, SpanStatusCode } from '@opentelemetry/api';
+import { SemanticAttributes } from '@opentelemetry/semantic-conventions';
+
 import {
     _grpcStatusCodeToOpenTelemetryStatusCode,
     _methodIsIgnored,
 } from '@opentelemetry/instrumentation-grpc/build/src/utils';
-import { IgnoreMatcher } from '@opentelemetry/instrumentation-grpc/build/src/types';
 import { AttributeNames } from '@opentelemetry/instrumentation-grpc/build/src/enums/AttributeNames';
-import { SemanticAttributes } from '@opentelemetry/semantic-conventions';
+import { GRPC_STATUS_CODE_OK } from '@opentelemetry/instrumentation-grpc/build/src/status-code';
 import {createAndAddBodyCapture} from "./GrpcJsHypertraceInstrumentation";
 
 export const CALL_SPAN_ENDED = Symbol('opentelemetry call span ended');
@@ -46,8 +58,8 @@ function serverStreamAndBidiHandler<RequestType, ResponseType>(
     span: Span,
     call: GrpcEmitter,
     original:
-        | grpcJs.handleBidiStreamingCall<RequestType, ResponseType>
-        | grpcJs.handleServerStreamingCall<RequestType, ResponseType>
+        | handleBidiStreamingCall<RequestType, ResponseType>
+        | handleServerStreamingCall<RequestType, ResponseType>
 ): void {
     let spanEnded = false;
     const endSpan = () => {
@@ -73,13 +85,13 @@ function serverStreamAndBidiHandler<RequestType, ResponseType>(
         });
         span.setAttribute(
             SemanticAttributes.RPC_GRPC_STATUS_CODE,
-            SpanStatusCode.OK.toString()
+            GRPC_STATUS_CODE_OK
         );
 
         endSpan();
     });
 
-    call.on('error', (err: grpcJs.ServiceError) => {
+    call.on('error', (err: ServiceError) => {
         if (call[CALL_SPAN_ENDED]) {
             return;
         }
@@ -94,6 +106,7 @@ function serverStreamAndBidiHandler<RequestType, ResponseType>(
         span.setAttributes({
             [AttributeNames.GRPC_ERROR_NAME]: err.name,
             [AttributeNames.GRPC_ERROR_MESSAGE]: err.message,
+            [SemanticAttributes.RPC_GRPC_STATUS_CODE]: err.code,
         });
         endSpan();
     });
@@ -110,23 +123,22 @@ function clientStreamAndUnaryHandler<RequestType, ResponseType>(
     call: ServerCallWithMeta<RequestType, ResponseType>,
     callback: SendUnaryDataCallback<ResponseType>,
     original:
-        | grpcJs.handleUnaryCall<RequestType, ResponseType>
-        | grpcJs.ClientReadableStream<RequestType>
+        | handleUnaryCall<RequestType, ResponseType>
+        | ClientReadableStream<RequestType>
 ): void {
     const patchedCallback: SendUnaryDataCallback<ResponseType> = (
-        err: grpcJs.ServiceError | null,
+        err: ServiceError | null,
         value?: ResponseType
     ) => {
+        // DIFF
+        createAndAddBodyCapture(span, value, "response")
         if (err) {
             if (err.code) {
                 span.setStatus({
                     code: _grpcStatusCodeToOpenTelemetryStatusCode(err.code),
                     message: err.message,
                 });
-                span.setAttribute(
-                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                    err.code.toString()
-                );
+                span.setAttribute(SemanticAttributes.RPC_GRPC_STATUS_CODE, err.code);
             }
             span.setAttributes({
                 [AttributeNames.GRPC_ERROR_NAME]: err.name,
@@ -134,17 +146,12 @@ function clientStreamAndUnaryHandler<RequestType, ResponseType>(
             });
         } else {
             span.setStatus({ code: SpanStatusCode.UNSET });
-            span.setAttribute(SemanticAttributes.RPC_GRPC_STATUS_CODE, 0)
-            // This will set a SpanStatus which is different from grpc status
-            // if no error, use grpc 0 for OK
-            // span.setAttribute(
-            //     SemanticAttributes.RPC_GRPC_STATUS_CODE,
-            //     SpanStatusCode.OK.toString()
-            // );
+            span.setAttribute(
+                SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                GRPC_STATUS_CODE_OK
+            );
         }
-        span.setAttribute("rpc.system", "grpc")
-        span.setAttribute("grpc.content_type", "application/grpc")
-        createAndAddBodyCapture(span, value, 'response')
+
         span.end();
         return callback(err, value);
     };
@@ -173,8 +180,8 @@ export function handleServerFunction<RequestType, ResponseType>(
                 call,
                 callback,
                 originalFunc as
-                    | grpcJs.handleUnaryCall<RequestType, ResponseType>
-                    | grpcJs.ClientReadableStream<RequestType>
+                    | handleUnaryCall<RequestType, ResponseType>
+                    | ClientReadableStream<RequestType>
             );
         case 'serverStream':
         case 'server_stream':
@@ -183,8 +190,8 @@ export function handleServerFunction<RequestType, ResponseType>(
                 span,
                 call,
                 originalFunc as
-                    | grpcJs.handleBidiStreamingCall<RequestType, ResponseType>
-                    | grpcJs.handleServerStreamingCall<RequestType, ResponseType>
+                    | handleBidiStreamingCall<RequestType, ResponseType>
+                    | handleServerStreamingCall<RequestType, ResponseType>
             );
         default:
             break;
@@ -219,7 +226,6 @@ export function handleUntracedServerFunction<RequestType, ResponseType>(
  * Returns true if the server call should not be traced.
  */
 export function shouldNotTraceServerCall(
-    metadata: grpcJs.Metadata,
     methodName: string,
     ignoreGrpcMethods?: IgnoreMatcher[]
 ): boolean {
