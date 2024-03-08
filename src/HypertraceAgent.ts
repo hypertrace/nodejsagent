@@ -27,7 +27,7 @@ import {GraphQLInstrumentation} from "@opentelemetry/instrumentation-graphql";
 import {logger} from "./Logging";
 import {version} from "./Version";
 import {OTLPTraceExporter} from "@opentelemetry/exporter-trace-otlp-grpc";
-import {MongooseInstrumentation} from "opentelemetry-instrumentation-mongoose";
+import {MongooseInstrumentation} from "@opentelemetry/instrumentation-mongoose";
 import {GrpcJsHypertraceInstrumentation} from "./instrumentation/GrpcJsHypertraceInstrumentation";
 import {patchClientRequest} from "./instrumentation/wrapper/OutgoingRequestWrapper";
 import {HttpHypertraceInstrumentation} from "./instrumentation/HttpHypertraceInstrumentation";
