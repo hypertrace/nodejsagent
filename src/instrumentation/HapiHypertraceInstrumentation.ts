@@ -1,3 +1,4 @@
+// Based on: https://github.com/open-telemetry/opentelemetry-js-contrib/blob/main/plugins/node/opentelemetry-instrumentation-hapi/src/instrumentation.ts
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -332,6 +333,7 @@ export class HapiHypertraceInstrumentation extends InstrumentationBase {
             const newHandler: PatchableExtMethod = async function (
                 ...params: Parameters<Hapi.Lifecycle.Method>
             ) {
+                // DIFF, get span instead of start, leverage HTTP span
                 if (api.trace.getSpan(api.context.active()) === undefined) {
                     return await method.apply(this, params);
                 }

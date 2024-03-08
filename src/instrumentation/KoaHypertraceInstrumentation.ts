@@ -1,3 +1,5 @@
+// Based on: https://github.com/open-telemetry/opentelemetry-js-contrib/blob/main/plugins/node/opentelemetry-instrumentation-koa/src/instrumentation.ts
+
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -231,6 +233,7 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
                 } catch (err: any) {
                     span.recordException(<Exception>err);
                     // @ts-ignore
+                    // DIFF to support filter api
                     if(err.message == MESSAGE){
                         span.setAttribute('http.status_code', STATUS_CODE)
                         span.setAttribute('http.status_text', MESSAGE)

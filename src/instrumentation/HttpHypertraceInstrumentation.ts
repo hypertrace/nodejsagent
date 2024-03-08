@@ -1,3 +1,5 @@
+// Based on: https://github.com/open-telemetry/opentelemetry-js/blob/main/experimental/packages/opentelemetry-instrumentation-http/src/instrumentation.ts
+
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -542,6 +544,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                             instrumentation._callRequestHook(span, request);
                         }
                     } catch(e){
+                        // DIFF start
                         // we will raise forbidden error if filters evaluated to true
                         // we need to close + write 403 resp before app code is invoked
                         response.statusCode = STATUS_CODE
@@ -569,6 +572,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                             startTime,
                             e
                         );
+                        // DIFF end
                         return false
                     }
 
@@ -577,6 +581,7 @@ export class HttpHypertraceInstrumentation extends InstrumentationBase<Http> {
                     }
                     const originalEnd = response.end;
                     response.end = function(chunk, ...args) {
+                        // DIFF
                         ResponseEnded(span, response, [chunk, ...args])
                         return originalEnd.apply(this, [chunk, ...args]);
                     };
