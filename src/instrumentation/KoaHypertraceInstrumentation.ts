@@ -1,29 +1,41 @@
-// Based on: https://github.com/open-telemetry/opentelemetry-js-contrib/pull/646/files
-// the req + resp callback work should be pr'd + merged to OTEL(doing patch here just because of time to get those changes merged upstream)
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import * as api from '@opentelemetry/api';
 import {
-    InstrumentationBase,
-    InstrumentationConfig,
-    InstrumentationNodeModuleDefinition,
     isWrapped,
+    InstrumentationBase,
+    InstrumentationNodeModuleDefinition,
+    safeExecuteInTheMiddle,
 } from '@opentelemetry/instrumentation';
 
 import type * as koa from 'koa';
+import { KoaContext, KoaLayerType, KoaInstrumentationConfig } from '@opentelemetry/instrumentation-koa/build/src/types';
+import { VERSION } from '@opentelemetry/instrumentation-koa/build/src/version';
+import { getMiddlewareMetadata, isLayerIgnored } from '@opentelemetry/instrumentation-koa/build/src/utils';
+import { getRPCMetadata, RPCType } from '@opentelemetry/core';
 import {
     kLayerPatched,
-    KoaComponentName,
-    KoaContext,
-    KoaLayerType,
     KoaMiddleware,
-} from '@opentelemetry/instrumentation-koa/build/src/types'
-import {AttributeNames} from '@opentelemetry/instrumentation-koa/build/src/enums/AttributeNames';
-import {VERSION} from '@opentelemetry/instrumentation-koa/build/src/version';
-import {getMiddlewareMetadata} from '@opentelemetry/instrumentation-koa/build/src/utils';
-import {getRPCMetadata, RPCType, setRPCMetadata} from '@opentelemetry/core';
+    KoaPatchedMiddleware,
+} from '@opentelemetry/instrumentation-koa/build/src/internal-types';
 import {Exception, trace} from "@opentelemetry/api";
 import {MESSAGE, STATUS_CODE} from "../filter/Filter";
 
-export interface KoaInstrumentationConfig extends InstrumentationConfig {
+export interface CustomKoaInstrumentationConfig extends KoaInstrumentationConfig {
     /** Ignore specific layers based on their type */
     ignoreLayersType?: KoaLayerType[];
     requestCallback?: Function,
@@ -32,15 +44,31 @@ export interface KoaInstrumentationConfig extends InstrumentationConfig {
 
 /** Koa instrumentation for OpenTelemetry */
 export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa> {
-    static readonly component = KoaComponentName;
-    constructor(config?: KoaInstrumentationConfig) {
-        super('@opentelemetry/instrumentation-koa', VERSION, config);
+    constructor(config: CustomKoaInstrumentationConfig = {}) {
+        super(
+            '@opentelemetry/instrumentation-koa',
+            VERSION,
+            Object.assign({}, config)
+        );
     }
+
+    setConfig(config: KoaInstrumentationConfig = {}) {
+        this._config = Object.assign({}, config);
+    }
+
+    getConfig(): KoaInstrumentationConfig {
+        return this._config as KoaInstrumentationConfig;
+    }
+
     protected init() {
         return new InstrumentationNodeModuleDefinition<typeof koa>(
             'koa',
             ['^2.0.0'],
-            moduleExports => {
+            (module: any) => {
+                const moduleExports: typeof koa =
+                    module[Symbol.toStringTag] === 'Module'
+                        ? module.default // ESM
+                        : module; // CommonJS
                 if (moduleExports == null) {
                     return moduleExports;
                 }
@@ -53,9 +81,13 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
                     'use',
                     this._getKoaUsePatch.bind(this)
                 );
-                return moduleExports;
+                return module;
             },
-            moduleExports => {
+            (module: any) => {
+                const moduleExports: typeof koa =
+                    module[Symbol.toStringTag] === 'Module'
+                        ? module.default // ESM
+                        : module; // CommonJS
                 api.diag.debug('Unpatching Koa');
                 if (isWrapped(moduleExports.prototype.use)) {
                     this._unwrap(moduleExports.prototype, 'use');
@@ -117,19 +149,28 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
      * router about the routed path which the middleware is attached to
      */
     private _patchLayer(
-        middlewareLayer: KoaMiddleware,
+        middlewareLayer: KoaPatchedMiddleware,
         isRouter: boolean,
-        layerPath?: string
+        layerPath?: string | RegExp
     ): KoaMiddleware {
         const layerType = isRouter ? KoaLayerType.ROUTER : KoaLayerType.MIDDLEWARE;
         // Skip patching layer if its ignored in the config
         if (
             middlewareLayer[kLayerPatched] === true ||
-            isLayerIgnored(layerType, this._config)
+            isLayerIgnored(layerType, this.getConfig())
+        )
+            return middlewareLayer;
+
+        if (
+            middlewareLayer.constructor.name === 'GeneratorFunction' ||
+            middlewareLayer.constructor.name === 'AsyncGeneratorFunction'
         ) {
+            api.diag.debug('ignoring generator-based Koa middleware layer');
             return middlewareLayer;
         }
+
         middlewareLayer[kLayerPatched] = true;
+
         api.diag.debug('patching Koa middleware layer');
         return async (context: KoaContext, next: koa.Next) => {
             const parent = api.trace.getSpan(api.context.active());
@@ -154,29 +195,41 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
 
             const rpcMetadata = getRPCMetadata(api.context.active());
 
-            if (
-                metadata.attributes[AttributeNames.KOA_TYPE] === KoaLayerType.ROUTER &&
-                rpcMetadata?.type === RPCType.HTTP
-            ) {
-                rpcMetadata.span.updateName(
-                    `${context.method} ${context._matchedRoute}`
+            if (rpcMetadata?.type === RPCType.HTTP && context._matchedRoute) {
+                rpcMetadata.route = context._matchedRoute.toString();
+            }
+
+            if (this.getConfig().requestHook) {
+                safeExecuteInTheMiddle(
+                    () =>
+                        this.getConfig().requestHook!(span, {
+                            context,
+                            middlewareLayer,
+                            layerType,
+                        }),
+                    e => {
+                        if (e) {
+                            api.diag.error('koa instrumentation: request hook failed', e);
+                        }
+                    },
+                    true
                 );
             }
 
-            return api.context.with(api.context.active(), async () => {
+            const newContext = api.trace.setSpan(api.context.active(), span);
+            return api.context.with(newContext, async () => {
                 try {
                     // start of diff
                     // req attributes could be received from shimmer wrapping Koa.prototype.handleRequest
                     // this approach is slightly more straightforward since we already have to modify KoaConfig for the resp capture
-                    let reqCallback = (<KoaInstrumentationConfig>this._config)?.requestCallback;
+                    let reqCallback = (<CustomKoaInstrumentationConfig>this._config)?.requestCallback;
                     if(reqCallback) {
                         reqCallback(context, span)
                     }
                     // end of diff
                     return await middlewareLayer(context, next);
-                } catch (err) {
+                } catch (err: any) {
                     span.recordException(<Exception>err);
-                    let a = MESSAGE;
                     // @ts-ignore
                     if(err.message == MESSAGE){
                         span.setAttribute('http.status_code', STATUS_CODE)
@@ -186,23 +239,13 @@ export class KoaHypertraceInstrumentation extends InstrumentationBase<typeof koa
                 } finally {
                     // start of diff:
                     // We need to call resp callback before span ends to collect resp attributes
-                    let respCallback = (<KoaInstrumentationConfig>this._config)?.responseCallback;
+                    let respCallback = (<CustomKoaInstrumentationConfig>this._config)?.responseCallback;
                     if(respCallback) {
                         respCallback!(context, span)
                     }
                     // End of diff
-                    span.end();
                 }
             });
         };
     }
 }
-export const isLayerIgnored = (
-    type: KoaLayerType,
-    config?: KoaInstrumentationConfig
-): boolean => {
-    return !!(
-        Array.isArray(config?.ignoreLayersType) &&
-        config?.ignoreLayersType?.includes(type)
-    );
-};

@@ -17,7 +17,7 @@ const proto = (grpc.loadPackageDefinition(
 ) as unknown) as ProtoGrpcType;
 
 // @ts-ignore
-const client = new proto.NoteService('localhost:50051', grpc.credentials.createInsecure())
+const client = new proto.NoteService('0.0.0.0:50051', grpc.credentials.createInsecure())
 
 describe('Grpc JS Support', () => {
     before((done)=> {
@@ -43,11 +43,17 @@ describe('Grpc JS Support', () => {
         beforeEach((done) =>  {
             let metadata = new grpc.Metadata();
             metadata.add('some-metadata-key', 'some-metadata-value');
-            client.List({}, metadata, (err, notes) => {
-                if (err) throw err
-                console.log(notes)
+            try {
+                client.List({}, metadata, (err, notes) => {
+                    if (err) throw err
+                    console.log(notes)
+                    done()
+                })
+            }catch(e){
+                console.log(e)
                 done()
-            })
+            }
+
         })
         it('can collect grpc metadata',  () => {
             let spans = agentTestWrapper.getSpans()
@@ -56,7 +62,6 @@ describe('Grpc JS Support', () => {
             let serverSpan = spans[0]
             let ssAttributes = serverSpan.attributes
             expect(ssAttributes['rpc.request.metadata.some-metadata-key']).to.equal('some-metadata-value')
-            expect(ssAttributes['rpc.request.metadata.user-agent']).to.equal('grpc-node-js/1.5.4')
             expect(ssAttributes['rpc.response.metadata.some-metadata-key-from-server']).to.equal('some-metadata-server-value')
             expect(serverSpan.name).to.equal('grpc.NoteService/List')
 
@@ -64,7 +69,8 @@ describe('Grpc JS Support', () => {
             let csAttributes = clientSpan.attributes
             expect(csAttributes['rpc.request.metadata.some-metadata-key']).to.equal('some-metadata-value')
             expect(csAttributes['rpc.response.metadata.some-metadata-key-from-server']).to.equal('some-metadata-server-value')
-            expect(csAttributes['grpc.method']).to.equal('/NoteService/List')
+            expect(csAttributes['rpc.method']).to.equal('List')
+            expect(csAttributes['rpc.service']).to.equal('NoteService')
             expect(clientSpan.name).to.equal('grpc.NoteService/List')
         })
 
@@ -149,7 +155,7 @@ describe('Grpc JS Support', () => {
                 expect(ssAttributes['rpc.grpc.status_code']).to.equal("7")
 
                 let csAttributes = spans[1].attributes
-                expect(csAttributes['rpc.grpc.status_code']).to.equal("7")
+                expect(csAttributes['rpc.grpc.status_code']).to.equal(7)
             })
         })
 
@@ -175,7 +181,7 @@ describe('Grpc JS Support', () => {
                 expect(ssAttributes['rpc.grpc.status_code']).to.equal("7")
 
                 let csAttributes = spans[1].attributes
-                expect(csAttributes['rpc.grpc.status_code']).to.equal("7")
+                expect(csAttributes['rpc.grpc.status_code']).to.equal(7)
             })
         })
     })

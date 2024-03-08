@@ -83,13 +83,6 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
-        if (Framework.getInstance().available('@grpc/grpc-js')) {
-            // we need to check for grpc a level up before trying to patch since we cant "require" in the
-            // specific class we need to instead it has to be imported,
-            // but imports cant occur within conditionals
-            const grpcWrapper = require('./instrumentation/wrapper/GrpcJsWrapper')
-            grpcWrapper.patchGrpc()
-        }
 
         let instrumentations = [
             new ExtendedAwsLambdaInstrumentation({
