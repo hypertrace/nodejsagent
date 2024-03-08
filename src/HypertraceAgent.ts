@@ -1,8 +1,6 @@
 // need to load patch first to load patch to support import and require
 import {isCompatible} from "./instrumentation/InstrumentationCompat";
 
-require('./instrumentation/instrumentation-patch');
-
 import {ExtendedAwsLambdaInstrumentation} from "./instrumentation/ExtendedAwsLambdaInstrumentation";
 import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
 import {BatchSpanProcessor, InMemorySpanExporter, SpanExporter} from '@opentelemetry/sdk-trace-base';
