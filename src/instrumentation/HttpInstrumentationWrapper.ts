@@ -198,10 +198,11 @@ export class HttpInstrumentationWrapper {
 
             response.emit = function (eventName: string, ...args: any[]) {
                 if (eventName === 'data') {
+                    bodyCapture.appendData(args[0])
                     chunks.push(Buffer.from(args[0]));
                 } else if (eventName === 'end') {
                     const bodyBuffer = Buffer.concat(chunks);
-                    let bodyString = bodyBuffer.toString('utf-8');
+                    let bodyString = bodyCapture.dataString()
                     span.setAttribute("http.response.body", bodyString);
                     // @ts-ignore
                     if(response.stream){
