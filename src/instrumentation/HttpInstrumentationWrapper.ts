@@ -19,6 +19,7 @@ import {SemanticAttributes} from "@opentelemetry/semantic-conventions";
 import {Framework} from "./Framework";
 import {hypertraceDomain} from "../HypertraceAgent";
 import http from "http";
+import stream from "node:stream";
 
 const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
 
@@ -192,15 +193,28 @@ export class HttpInstrumentationWrapper {
                 span.setAttribute(`http.response.header.${key}`.toLowerCase(), <string>value)
             }
             let bodyCapture = new BodyCapture(<number>Config.getInstance().config.data_capture.body_max_size_bytes, 0);
-            const listener = (chunk: any) => {
-                bodyCapture.appendData(chunk);
+            const chunks: Buffer[] = [];
+            const originalEmit = response.emit;
+
+            response.emit = function (eventName: string, ...args: any[]) {
+                if (eventName === 'data') {
+                    bodyCapture.appendData(args[0])
+                    chunks.push(Buffer.from(args[0]));
+                } else if (eventName === 'end') {
+                    const bodyBuffer = Buffer.concat(chunks);
+                    let bodyString = bodyCapture.dataString()
+                    span.setAttribute("http.response.body", bodyString);
+                    // @ts-ignore
+                    if(response.stream){
+                        // @ts-ignore
+                        response.stream = stream.Readable.from(bodyBuffer);
+                    }
+
+                }
+
+                return originalEmit.apply(response, [eventName, ...args]);
             };
-            response.on("data", listener);
-            response.once("end", () => {
-                response.removeListener('data', listener);
-                let bodyString = bodyCapture.dataString();
-                span.setAttribute("http.response.body", bodyString);
-            });
+
         }
 
     }
