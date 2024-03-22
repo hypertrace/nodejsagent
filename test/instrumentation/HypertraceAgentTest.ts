@@ -6,6 +6,7 @@ import {expect} from "chai";
 import * as http from "http";
 import {httpRequest} from "./HttpRequest";
 import {Config} from "../../src/config/config";
+import grpc, {ChannelCredentials} from "@grpc/grpc-js";
 
 describe('Agent tests', () => {
     const express = require('express');
@@ -70,4 +71,13 @@ describe('Agent tests', () => {
         let provider = AgentForTest.getInstance()._provider
         expect(provider.resource.attributes['telemetry.sdk.version']).to.equal('1.2.3')
     })
+
+    it('will not crash if certs are not found', () => {
+        AgentForTest.renew('1.2.3');
+        Config.getInstance().config.reporting.cert_file = "./nonexistent.crt";
+        let result = AgentForTest.getInstance().getGrpcCredentials();
+
+        // Assert that result is an instance of ChannelCredentials
+        expect(result).to.be.an.instanceof(ChannelCredentials);
+    });
 });
