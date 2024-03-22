@@ -33,6 +33,7 @@ import {patchSails} from "./instrumentation/wrapper/SailsWrapper";
 import {Framework} from "./instrumentation/Framework";
 import {LambdaRequestHook, LambdaResponseHook} from "./instrumentation/LambdaInstrumentationWrapper";
 import {patchHapi} from "./instrumentation/wrapper/HapiWrapper";
+import {ChannelCredentials} from "@grpc/grpc-js";
 
 const api = require("@opentelemetry/api");
 const grpc = require('@grpc/grpc-js');
@@ -191,16 +192,26 @@ export class HypertraceAgent {
             return new InMemorySpanExporter()
         } else {
             logger.info(`Creating OTLP exporter reporting to: ${this.config.config.reporting.endpoint}`)
-            const credentials = this.config.config.reporting.cert_file.length > 0
-                ? grpc.credentials.createSsl(
-                    fs.readFileSync(this.config.config.reporting.cert_file)
-                )
-                : grpc.credentials.createInsecure();
+            const credentials = this.getGrpcCredentials()
 
             return new OTLPTraceExporter({
                 url: this.config.config.reporting.endpoint,
                 credentials,
             });
+        }
+    }
+
+    getGrpcCredentials(): ChannelCredentials {
+        if (this.config.config.reporting.cert_file.length > 0) {
+            try {
+                const certFileContent = fs.readFileSync(this.config.config.reporting.cert_file);
+                return grpc.credentials.createSsl(certFileContent);
+            } catch (error) {
+                logger.error('Error reading TLS certificate file:', error);
+                return grpc.credentials.createInsecure();
+            }
+        } else {
+            return grpc.credentials.createInsecure();
         }
     }
 }
