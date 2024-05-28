@@ -4,6 +4,7 @@ import {SpanKind, SpanStatusCode, trace} from "@opentelemetry/api";
 import {
     context as otelContext,
 } from '@opentelemetry/api';
+import {logger} from "../Logging";
 
 import {VERSION} from "@opentelemetry/instrumentation-aws-lambda/build/src/version"
 
@@ -39,7 +40,12 @@ export class ExtendedAwsLambdaInstrumentation extends AwsLambdaInstrumentation {
                     }
 
                     span.end();
-                    await traceProvider.forceFlush()
+                    try {
+                        await traceProvider.forceFlush()
+                    }catch(e){
+                        logger.error("Error exporting trace in extendedLambdaHandler original invoke attempt, continue without export")
+                        logger.error(e)
+                    }
 
                     return result;
                 } catch (error) {
@@ -55,7 +61,12 @@ export class ExtendedAwsLambdaInstrumentation extends AwsLambdaInstrumentation {
                         message: error.message,
                     });
                     span.end();
-                    await traceProvider.forceFlush()
+                    try {
+                        await traceProvider.forceFlush()
+                    }catch(e){
+                        logger.error("Error exporting trace in extendedLambdaHandler error handler, continue without export")
+                        logger.error(e)
+                    }
                     throw error; // Rethrow the error to ensure Lambda can handle it accordingly
                 }
             });
