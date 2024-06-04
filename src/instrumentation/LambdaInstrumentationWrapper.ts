@@ -15,7 +15,6 @@ export function LambdaRequestHook(span, {event, context}){
         return
     }
 
-    logger.debug('Received lambda event', event);
     logger.debug('received lambda event')
     logger.debug(event)
 
