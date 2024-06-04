@@ -5,8 +5,17 @@ import {Config} from "../config/config";
 import {HttpInstrumentationWrapper} from "./HttpInstrumentationWrapper";
 
 export function LambdaRequestHook(span, {event, context}){
-    let headers = event['headers']
-    let lambdaRequestContext = event['requestContext']
+    const headers = event['headers'];
+    const lambdaRequestContext = event['requestContext'];
+
+    if(!headers || !lambdaRequestContext){
+        logger.warn("Received unexpected lambda event that doesnt look like an ApiGateway event")
+        logger.warn("Is the event an ApiGateway event?")
+        logger.warn(event)
+        return
+    }
+
+    logger.debug('Received lambda event', event);
     logger.debug('received lambda event')
     logger.debug(event)
 
