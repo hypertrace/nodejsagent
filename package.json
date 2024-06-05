@@ -1,6 +1,6 @@
 {
   "name": "@hypertrace/nodejsagent",
-  "version": "1.8.5",
+  "version": "1.8.6-dev",
   "description": "Hypertrace Node.js Agent",
   "author": "Traceable Inc.",
   "license": "Apache-2.0",
