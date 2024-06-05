@@ -34,6 +34,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@hypertrace'
 
+      - name: Check tag format
+        run: |
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v?([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Tag is valid"
+          else
+            echo "Tag $GITHUB_REF does not look like expected version string"
+            exit 0
+          fi
+
       - run: npm install
       - run: npm install -g typescript@5.4.2
 
