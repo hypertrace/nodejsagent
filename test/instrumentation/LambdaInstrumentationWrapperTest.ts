@@ -263,4 +263,19 @@ describe("manually instrument lambda function", () => {
             '\t"req-body": "some-data"\n' +
             '}')
     })
+
+    it('can handle non-apigateway events gracefully', async () => {
+        async function myHandler(event, context, callback){
+            return {"foo": "bar"}
+        }
+
+        let wrappedHandler = agentTestWrapper.instrumentLambda(myHandler)
+        let errorCount = 0
+        try {
+            await wrappedHandler({"some-different-event": "foo"}, {}, () => {})
+        } catch(error){
+            errorCount += 1
+        }
+        expect(errorCount).to.equal(0)
+    })
 })
