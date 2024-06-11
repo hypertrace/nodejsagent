@@ -10,8 +10,8 @@ export function LambdaRequestHook(span, {event, context}){
 
     if(!headers || !lambdaRequestContext){
         logger.warn("Received unexpected lambda event that doesnt look like an ApiGateway event tracing will be skipped")
-        logger.warn("Is the event an ApiGateway event?")
-        logger.warn(event)
+        logger.warn("Is the event an ApiGateway event - enable debug logging to view original event")
+        logger.debug(event)
         return
     }
 
