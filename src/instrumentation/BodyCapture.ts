@@ -1,5 +1,22 @@
 import sizeof from 'object-sizeof'
 
+const _RECORDABLE_CONTENT_TYPES = ['application/json', 'application/graphql', 'application/x-www-form-urlencoded']
+export function shouldCapture(configField: boolean, contentTypeValue: any): boolean {
+    if (!configField) {
+        return false
+    }
+    if(!contentTypeValue){
+        return false
+    }
+
+    for (let recordableType of _RECORDABLE_CONTENT_TYPES) {
+        if (contentTypeValue.includes(recordableType)) {
+            return true
+        }
+    }
+    return false
+}
+
 export class BodyCapture {
     private data: string;
     private currentSize : number;
