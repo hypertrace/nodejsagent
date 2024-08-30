@@ -41,6 +41,7 @@ describe('Agent tests', () => {
     before((done)=> {
         const currentNodeVersion = process.version;
         if (semver.lt(currentNodeVersion, '18.0.0')) {
+            // @ts-ignore
             this.skip();
         }
         Framework.getInstance().isExpressBased = () => {return false}
