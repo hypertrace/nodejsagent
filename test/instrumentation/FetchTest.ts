@@ -7,6 +7,7 @@ import * as http from "http";
 import {httpRequest} from "./HttpRequest";
 import {Framework} from "../../src/instrumentation/Framework";
 import {SpanKind} from "@opentelemetry/api";
+import semver = require("semver/preload");
 
 describe('Agent tests', () => {
     const requestListener = async function (req, res) {
@@ -38,6 +39,10 @@ describe('Agent tests', () => {
     let originalOnlyExpress = Framework.getInstance().isExpressBased
     let originalanyFrameworks = Framework.getInstance().anyFrameworks
     before((done)=> {
+        const currentNodeVersion = process.version;
+        if (semver.lt(currentNodeVersion, '18.0.0')) {
+            this.skip();
+        }
         Framework.getInstance().isExpressBased = () => {return false}
         Framework.getInstance().isPureExpress = () => {return false}
         Framework.getInstance().anyFrameworks = () => {return false}
