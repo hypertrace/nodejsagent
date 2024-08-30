@@ -3,14 +3,20 @@ import {BodyCapture, shouldCapture} from "../BodyCapture";
 import {Config} from "../../config/config";
 import {logger} from "../../Logging";
 import {SpanKind} from "@opentelemetry/api";
-
 const {context, trace} = require('@opentelemetry/api');
+
+let PATCHED = false;
 
 export function patchFetch() {
     if (typeof fetch !== 'undefined') {
         logger.info("Adding fetch patch")
     } else {
         return
+    }
+    if(PATCHED){
+        return
+    } else {
+        PATCHED = true
     }
     const originalFetch = fetch;
     global.fetch = async function (urlOrRequest: RequestInfo, options: RequestInit = {}) {
