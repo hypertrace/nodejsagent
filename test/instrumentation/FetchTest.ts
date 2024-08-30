@@ -38,7 +38,7 @@ describe('Agent tests', () => {
     let originalIncludeExpress = Framework.getInstance().isExpressBased
     let originalOnlyExpress = Framework.getInstance().isExpressBased
     let originalanyFrameworks = Framework.getInstance().anyFrameworks
-    before((done)=> {
+    before(function (done) {
         const currentNodeVersion = process.version;
         if (semver.lt(currentNodeVersion, '18.0.0')) {
             // @ts-ignore
