@@ -116,7 +116,12 @@ describe('NestJS tests', () => {
     });
 
     describe('filter api', () => {
-        before(() => {
+        before(function () {
+            const currentNodeVersion = process.version;
+            if (semver.lt(currentNodeVersion, '18.0.0')) {
+                // @ts-ignore
+                this.skip();
+            }
             Registry.getInstance().register(new SampleFilter())
         })
 
