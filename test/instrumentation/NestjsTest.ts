@@ -73,7 +73,10 @@ describe('NestJS tests', () => {
     })
 
     after(() => {
-        appInstance.close()
+        if(appInstance){
+            appInstance.close()
+        }
+
     })
 
     it('can capture request & response attributes', async () => {
@@ -127,7 +130,12 @@ describe('NestJS tests', () => {
 
         after(() => {
             // @ts-ignore
-            Registry.instance = undefined
+            const currentNodeVersion = process.version;
+            if (semver.gt(currentNodeVersion, '18.0.0')) {
+                // @ts-ignore
+                Registry.instance = undefined
+            }
+
         })
 
         it('will return a 403 if a body filter returns true', async () => {
