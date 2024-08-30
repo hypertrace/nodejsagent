@@ -34,6 +34,7 @@ import {Framework} from "./instrumentation/Framework";
 import {LambdaRequestHook, LambdaResponseHook} from "./instrumentation/LambdaInstrumentationWrapper";
 import {patchHapi} from "./instrumentation/wrapper/HapiWrapper";
 import {ChannelCredentials} from "@grpc/grpc-js";
+import {patchFetch} from "./instrumentation/wrapper/FetchWrapper";
 
 const api = require("@opentelemetry/api");
 const grpc = require('@grpc/grpc-js');
@@ -82,6 +83,7 @@ export class HypertraceAgent {
         patchClientRequest()
         patchExpress()
         patchSails()
+        patchFetch()
 
         let instrumentations = [
             new ExtendedAwsLambdaInstrumentation({
@@ -107,7 +109,7 @@ export class HypertraceAgent {
             new MySQL2Instrumentation(),
             new PgInstrumentation(),
             new MongoDBInstrumentation(),
-            new MongooseInstrumentation()
+            new MongooseInstrumentation(),
         ]
 
         if (isCompatible("12.0.0")) {

@@ -41,6 +41,7 @@ export class ExtendedAwsLambdaInstrumentation extends AwsLambdaInstrumentation {
 
                     span.end();
                     try {
+                        logger.debug("Exporting spans from node...")
                         await traceProvider.forceFlush()
                     }catch(e){
                         logger.error("Error exporting trace in extendedLambdaHandler original invoke attempt, continue without export")
@@ -62,6 +63,7 @@ export class ExtendedAwsLambdaInstrumentation extends AwsLambdaInstrumentation {
                     });
                     span.end();
                     try {
+                        logger.debug("Exporting spans from node-agent...")
                         await traceProvider.forceFlush()
                     }catch(e){
                         logger.error("Error exporting trace in extendedLambdaHandler error handler, continue without export")
