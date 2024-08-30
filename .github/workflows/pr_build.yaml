@@ -50,7 +50,7 @@ jobs:
       - run: tsc
 
       - name: Standup Test Docker Services
-        run: cd ./test/externalServices && docker-compose up -d
+        run: cd ./test/externalServices && docker compose up -d
       - name: Wait for Docker
         run: sleep 100
       - name: Check test containers state
