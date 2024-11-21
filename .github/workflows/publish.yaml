@@ -7,11 +7,11 @@ jobs:
   generate_proto:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
           node-version: '16'
       - run: npm install
@@ -27,8 +27,8 @@ jobs:
     runs-on: ubuntu-20.04
     needs: generate_proto
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "16"
           registry-url: 'https://registry.npmjs.org'
@@ -46,7 +46,7 @@ jobs:
       - run: npm install
       - run: npm install -g typescript@5.4.2
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: proto
           path: ./src/config/

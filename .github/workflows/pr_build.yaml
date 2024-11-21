@@ -20,7 +20,7 @@ jobs:
       - run: npm run generate_pb
 
       - name: Cache proto
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: proto
           path: ./src/config/generated.*
@@ -42,7 +42,7 @@ jobs:
       - run: npm install
       - run: npm install -g typescript@5.4.2
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: proto
           path: ./src/config/
