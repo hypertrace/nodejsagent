@@ -62,7 +62,7 @@ export function LambdaRequestHook(span, {event, context}){
 }
 
 export function LambdaResponseHook(span, {err, res}) : void {
-    if(err && !res){
+    if(err || !res){
         return
     }
     let statusCode = res['statusCode']

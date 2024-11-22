@@ -24,8 +24,14 @@ export class ExtendedAwsLambdaInstrumentation extends AwsLambdaInstrumentation {
 
             // @ts-ignore
             if (config.requestHook) {
-                // @ts-ignore
-                config.requestHook(span, {event, context: lambdaContext});
+                try{
+                    // @ts-ignore
+                    config.requestHook(span, {event, context: lambdaContext});
+                }catch(e){
+                    logger.debug("Error processing request hook")
+                    logger.debug(e)
+                }
+
             }
 
             return otelContext.with(trace.setSpan(otelContext.active(), span), async () => {
@@ -35,8 +41,14 @@ export class ExtendedAwsLambdaInstrumentation extends AwsLambdaInstrumentation {
 
                     // @ts-ignore
                     if (config.responseHook) {
-                        // @ts-ignore
-                        config.responseHook(span, {err: null, res: result});
+                        try{
+                            // @ts-ignore
+                            config.responseHook(span, {err: null, res: result});
+                        }catch(e){
+                            logger.debug("Error processing success state response hook")
+                            logger.debug(e)
+                        }
+
                     }
 
                     span.end();
@@ -52,8 +64,14 @@ export class ExtendedAwsLambdaInstrumentation extends AwsLambdaInstrumentation {
                 } catch (error) {
                     // @ts-ignore
                     if (config.responseHook) {
-                        // @ts-ignore
-                        config.responseHook(span, {err: error});
+                        try{
+                            // @ts-ignore
+                            config.responseHook(span, {err: error});
+                        }catch(e){
+                            logger.debug("Error processing error state response hook")
+                            logger.debug(e)
+                        }
+
                     }
 
                     span.recordException(error);
